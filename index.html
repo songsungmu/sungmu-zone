@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>날씨 앱</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="card">
+    <h1>날씨 검색</h1>
+
+    <form id="search-form" class="search-form">
+      <input type="text" id="city-input" placeholder="도시 이름 입력 (예: 서울)" autocomplete="off" required>
+      <button type="submit">검색</button>
+      <button type="button" id="locate-btn" title="현재 위치로 검색">📍</button>
+    </form>
+
+    <div id="status" class="status"></div>
+
+    <section id="result" class="result hidden">
+      <div class="location">
+        <h2 id="city-name"></h2>
+        <span id="date-time"></span>
+      </div>
+      <div class="main-info">
+        <div id="weather-icon" class="icon"></div>
+        <div class="temp"><span id="temperature"></span>°C</div>
+      </div>
+      <p id="description" class="description"></p>
+      <div class="details">
+        <div class="detail-item">
+          <span class="label">체감온도</span>
+          <span id="feels-like" class="value"></span>
+        </div>
+        <div class="detail-item">
+          <span class="label">습도</span>
+          <span id="humidity" class="value"></span>
+        </div>
+        <div class="detail-item">
+          <span class="label">풍속</span>
+          <span id="wind-speed" class="value"></span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
