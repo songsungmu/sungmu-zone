@@ -7,43 +7,70 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="card">
-    <h1>날씨 검색</h1>
+  <div class="phone">
+    <header class="app-header">
+      <h1>날씨</h1>
+      <button type="button" id="locate-btn" class="icon-btn" title="현재 위치로 검색">📍</button>
+    </header>
 
-    <form id="search-form" class="search-form">
+    <form id="search-form" class="search-bar">
+      <span class="search-icon">🔍</span>
       <input type="text" id="city-input" placeholder="도시 이름 입력 (예: 서울)" autocomplete="off" required>
-      <button type="submit">검색</button>
-      <button type="button" id="locate-btn" title="현재 위치로 검색">📍</button>
+      <button type="submit" class="search-btn">검색</button>
     </form>
 
-    <div id="status" class="status"></div>
+    <main class="chat-room">
+      <div id="status" class="status"></div>
 
-    <section id="result" class="result hidden">
-      <div class="location">
-        <h2 id="city-name"></h2>
-        <span id="date-time"></span>
-      </div>
-      <div class="main-info">
-        <div id="weather-icon" class="icon"></div>
-        <div class="temp"><span id="temperature"></span>°C</div>
-      </div>
-      <p id="description" class="description"></p>
-      <div class="details">
-        <div class="detail-item">
-          <span class="label">체감온도</span>
-          <span id="feels-like" class="value"></span>
+      <section id="result" class="bubble-row hidden">
+        <div class="avatar" id="weather-icon"></div>
+        <div class="bubble">
+          <div class="bubble-tail"></div>
+          <div class="bubble-top">
+            <span id="city-name" class="city-name"></span>
+            <span id="date-time" class="date-time"></span>
+          </div>
+          <div class="temp-line">
+            <span id="temperature" class="temperature"></span><span class="deg">°C</span>
+            <p id="description" class="description"></p>
+          </div>
+          <div class="details">
+            <div class="detail-item">
+              <span class="label">체감온도</span>
+              <span id="feels-like" class="value"></span>
+            </div>
+            <div class="detail-item">
+              <span class="label">습도</span>
+              <span id="humidity" class="value"></span>
+            </div>
+            <div class="detail-item">
+              <span class="label">풍속</span>
+              <span id="wind-speed" class="value"></span>
+            </div>
+          </div>
         </div>
-        <div class="detail-item">
-          <span class="label">습도</span>
-          <span id="humidity" class="value"></span>
-        </div>
-        <div class="detail-item">
-          <span class="label">풍속</span>
-          <span id="wind-speed" class="value"></span>
-        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav">
+      <div class="nav-item active">
+        <span class="nav-icon">☀️</span>
+        <span>날씨</span>
       </div>
-    </section>
-  </main>
+      <div class="nav-item">
+        <span class="nav-icon">💬</span>
+        <span>친구</span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">🛒</span>
+        <span>쇼핑</span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">⋯</span>
+        <span>더보기</span>
+      </div>
+    </nav>
+  </div>
 
   <script src="script.js"></script>
 </body>
