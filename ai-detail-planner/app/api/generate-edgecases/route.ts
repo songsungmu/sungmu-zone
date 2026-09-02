@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 
 import { extractJson } from "@/lib/ai-json";
+import { isValidEdgeCase, isValidPolicy, isValidRequirement } from "@/lib/planner-parsers";
 import type { EdgeCase, Policy, Requirement } from "@/types/planner";
 
 export const runtime = "nodejs";
@@ -35,28 +36,6 @@ function buildSystemPrompt(body: GenerateEdgeCasesBody): string {
   ).replace("{{policiesJson}}", JSON.stringify(body.policies));
 }
 
-function isValidRequirement(item: unknown): item is Requirement {
-  if (typeof item !== "object" || item === null) return false;
-  const { id, title, description, type } = item as Record<string, unknown>;
-  return (
-    typeof id === "string" &&
-    typeof title === "string" &&
-    typeof description === "string" &&
-    typeof type === "string"
-  );
-}
-
-function isValidPolicy(item: unknown): item is Policy {
-  if (typeof item !== "object" || item === null) return false;
-  const { id, policyName, content, rationale } = item as Record<string, unknown>;
-  return (
-    typeof id === "string" &&
-    typeof policyName === "string" &&
-    typeof content === "string" &&
-    typeof rationale === "string"
-  );
-}
-
 function parseEdgeCases(data: unknown): EdgeCase[] | null {
   if (
     typeof data !== "object" ||
@@ -67,23 +46,11 @@ function parseEdgeCases(data: unknown): EdgeCase[] | null {
   }
 
   const rawItems = (data as { edgeCases: unknown[] }).edgeCases;
-  const edgeCases: EdgeCase[] = [];
-
-  for (const item of rawItems) {
-    if (typeof item !== "object" || item === null) {
-      return null;
-    }
-    const { id, situation, handling } = item as Record<string, unknown>;
-    if (
-      typeof id !== "string" ||
-      typeof situation !== "string" ||
-      typeof handling !== "string"
-    ) {
-      return null;
-    }
-    edgeCases.push({ id, situation, handling, status: "ai_suggested" });
+  if (!rawItems.every(isValidEdgeCase)) {
+    return null;
   }
 
+  const edgeCases = rawItems.map((item) => ({ ...item, status: "ai_suggested" as const }));
   return edgeCases.length > 0 ? edgeCases : null;
 }
 

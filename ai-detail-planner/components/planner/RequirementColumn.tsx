@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
 import { StatusBadge } from "@/components/planner/StatusBadge";
@@ -20,18 +21,21 @@ interface RequirementColumnProps {
   items: Requirement[];
   onAdd: (text: string) => void;
   isLoading?: boolean;
+  isAdding?: boolean;
 }
 
 export function RequirementColumn({
   items,
   onAdd,
   isLoading = false,
+  isAdding = false,
 }: RequirementColumnProps) {
   const [draft, setDraft] = useState("");
+  const disabled = isLoading || isAdding;
 
   function handleAdd() {
     const trimmed = draft.trim();
-    if (!trimmed) return;
+    if (!trimmed || disabled) return;
     onAdd(trimmed);
     setDraft("");
   }
@@ -107,15 +111,15 @@ export function RequirementColumn({
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleAdd()}
           className="h-9"
-          disabled={isLoading}
+          disabled={disabled}
         />
         <Button
           size="sm"
           className="bg-blue-600 hover:bg-blue-700"
           onClick={handleAdd}
-          disabled={isLoading}
+          disabled={disabled}
         >
-          입력
+          {isAdding ? <Loader2 className="size-4 animate-spin" /> : "입력"}
         </Button>
       </div>
     </Card>

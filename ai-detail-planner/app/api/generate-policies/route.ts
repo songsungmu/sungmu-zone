@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 
 import { extractJson } from "@/lib/ai-json";
+import { isValidPolicy, isValidRequirement } from "@/lib/planner-parsers";
 import type { Policy, Requirement } from "@/types/planner";
 
 export const runtime = "nodejs";
@@ -39,17 +40,6 @@ function buildSystemPrompt(body: GeneratePoliciesBody): string {
     .replace("{{target}}", body.target);
 }
 
-function isValidRequirement(item: unknown): item is Requirement {
-  if (typeof item !== "object" || item === null) return false;
-  const { id, title, description, type } = item as Record<string, unknown>;
-  return (
-    typeof id === "string" &&
-    typeof title === "string" &&
-    typeof description === "string" &&
-    typeof type === "string"
-  );
-}
-
 function parsePolicies(data: unknown): Policy[] | null {
   if (
     typeof data !== "object" ||
@@ -60,24 +50,11 @@ function parsePolicies(data: unknown): Policy[] | null {
   }
 
   const rawItems = (data as { policies: unknown[] }).policies;
-  const policies: Policy[] = [];
-
-  for (const item of rawItems) {
-    if (typeof item !== "object" || item === null) {
-      return null;
-    }
-    const { id, policyName, content, rationale } = item as Record<string, unknown>;
-    if (
-      typeof id !== "string" ||
-      typeof policyName !== "string" ||
-      typeof content !== "string" ||
-      typeof rationale !== "string"
-    ) {
-      return null;
-    }
-    policies.push({ id, policyName, content, rationale, status: "ai_suggested" });
+  if (!rawItems.every(isValidPolicy)) {
+    return null;
   }
 
+  const policies = rawItems.map((item) => ({ ...item, status: "ai_suggested" as const }));
   return policies.length > 0 ? policies : null;
 }
 

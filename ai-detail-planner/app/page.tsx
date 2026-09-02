@@ -32,6 +32,21 @@ interface GenerateEdgeCasesResponse {
   error?: string;
 }
 
+type ColumnType = "requirements" | "policies" | "edgeCases";
+
+interface RefineColumnRequest {
+  columnType: ColumnType;
+  existingItems: Requirement[] | Policy[] | EdgeCase[];
+  userInput: string;
+  requirements?: Requirement[];
+  policies?: Policy[];
+}
+
+interface RefineColumnResponse<T> {
+  items?: T[];
+  error?: string;
+}
+
 const STEPS = [
   { key: "requirements", label: "상세 요구사항" },
   { key: "policies", label: "세부 정책" },
@@ -41,6 +56,9 @@ const STEPS = [
 export default function Home() {
   const [planner, setPlanner] = useState<PlannerState>(initialPlannerState);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isRefiningRequirements, setIsRefiningRequirements] = useState(false);
+  const [isRefiningPolicies, setIsRefiningPolicies] = useState(false);
+  const [isRefiningEdgeCases, setIsRefiningEdgeCases] = useState(false);
 
   const { loadingStage } = planner;
   const isGeneratingRequirements = loadingStage === "requirements";
@@ -133,51 +151,90 @@ export default function Home() {
     }
   }
 
-  function addRequirement(text: string) {
-    setPlanner((prev) => ({
-      ...prev,
-      requirements: [
-        ...prev.requirements,
-        {
-          id: `FR-${String(prev.requirements.length + 1).padStart(2, "0")}`,
-          title: text,
-          description: "",
-          type: "추가",
-          status: "ai_suggested",
-        },
-      ],
-    }));
+  async function callRefineColumn<T>(payload: RefineColumnRequest): Promise<T[]> {
+    const res = await fetch("/api/refine-column", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data: RefineColumnResponse<T> = await res.json();
+
+    if (!res.ok || !data.items) {
+      throw new Error(data.error ?? "추가 항목 생성 중 오류가 발생했습니다.");
+    }
+    return data.items;
   }
 
-  function addPolicy(text: string) {
-    setPlanner((prev) => ({
-      ...prev,
-      policies: [
-        ...prev.policies,
-        {
-          id: `PL-${String(prev.policies.length + 1).padStart(2, "0")}`,
-          policyName: text,
-          content: "",
-          status: "ai_suggested",
-          rationale: "추가 입력",
-        },
-      ],
-    }));
+  async function addRequirement(text: string) {
+    setIsRefiningRequirements(true);
+    setErrorMessage(null);
+
+    try {
+      const newItems = await callRefineColumn<Requirement>({
+        columnType: "requirements",
+        existingItems: planner.requirements,
+        userInput: text,
+      });
+      setPlanner((prev) => ({
+        ...prev,
+        requirements: [...prev.requirements, ...newItems],
+      }));
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다."
+      );
+    } finally {
+      setIsRefiningRequirements(false);
+    }
   }
 
-  function addEdgeCase(text: string) {
-    setPlanner((prev) => ({
-      ...prev,
-      edgeCases: [
-        ...prev.edgeCases,
-        {
-          id: `EC-${String(prev.edgeCases.length + 1).padStart(2, "0")}`,
-          situation: text,
-          handling: "",
-          status: "ai_suggested",
-        },
-      ],
-    }));
+  async function addPolicy(text: string) {
+    setIsRefiningPolicies(true);
+    setErrorMessage(null);
+
+    try {
+      const newItems = await callRefineColumn<Policy>({
+        columnType: "policies",
+        existingItems: planner.policies,
+        userInput: text,
+        requirements: planner.requirements,
+      });
+      setPlanner((prev) => ({
+        ...prev,
+        policies: [...prev.policies, ...newItems],
+      }));
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다."
+      );
+    } finally {
+      setIsRefiningPolicies(false);
+    }
+  }
+
+  async function addEdgeCase(text: string) {
+    setIsRefiningEdgeCases(true);
+    setErrorMessage(null);
+
+    try {
+      const newItems = await callRefineColumn<EdgeCase>({
+        columnType: "edgeCases",
+        existingItems: planner.edgeCases,
+        userInput: text,
+        requirements: planner.requirements,
+        policies: planner.policies,
+      });
+      setPlanner((prev) => ({
+        ...prev,
+        edgeCases: [...prev.edgeCases, ...newItems],
+      }));
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다."
+      );
+    } finally {
+      setIsRefiningEdgeCases(false);
+    }
   }
 
   return (
@@ -217,16 +274,19 @@ export default function Home() {
               items={planner.requirements}
               onAdd={addRequirement}
               isLoading={isGeneratingRequirements}
+              isAdding={isRefiningRequirements}
             />
             <PolicyColumn
               items={planner.policies}
               onAdd={addPolicy}
               isLoading={isGeneratingPolicies}
+              isAdding={isRefiningPolicies}
             />
             <EdgeCaseColumn
               items={planner.edgeCases}
               onAdd={addEdgeCase}
               isLoading={isGeneratingEdgeCases}
+              isAdding={isRefiningEdgeCases}
             />
           </div>
         </main>

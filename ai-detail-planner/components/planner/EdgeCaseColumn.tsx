@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
 import { StatusBadge } from "@/components/planner/StatusBadge";
@@ -20,14 +21,21 @@ interface EdgeCaseColumnProps {
   items: EdgeCase[];
   onAdd: (text: string) => void;
   isLoading?: boolean;
+  isAdding?: boolean;
 }
 
-export function EdgeCaseColumn({ items, onAdd, isLoading = false }: EdgeCaseColumnProps) {
+export function EdgeCaseColumn({
+  items,
+  onAdd,
+  isLoading = false,
+  isAdding = false,
+}: EdgeCaseColumnProps) {
   const [draft, setDraft] = useState("");
+  const disabled = isLoading || isAdding;
 
   function handleAdd() {
     const trimmed = draft.trim();
-    if (!trimmed) return;
+    if (!trimmed || disabled) return;
     onAdd(trimmed);
     setDraft("");
   }
@@ -98,15 +106,15 @@ export function EdgeCaseColumn({ items, onAdd, isLoading = false }: EdgeCaseColu
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleAdd()}
           className="h-9"
-          disabled={isLoading}
+          disabled={disabled}
         />
         <Button
           size="sm"
           className="bg-blue-600 hover:bg-blue-700"
           onClick={handleAdd}
-          disabled={isLoading}
+          disabled={disabled}
         >
-          입력
+          {isAdding ? <Loader2 className="size-4 animate-spin" /> : "입력"}
         </Button>
       </div>
     </Card>

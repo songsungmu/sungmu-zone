@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 
 import { extractJson } from "@/lib/ai-json";
+import { isValidRequirement } from "@/lib/planner-parsers";
 import type { Requirement } from "@/types/planner";
 
 export const runtime = "nodejs";
@@ -50,24 +51,11 @@ function parseRequirements(data: unknown): Requirement[] | null {
   }
 
   const rawItems = (data as { requirements: unknown[] }).requirements;
-  const requirements: Requirement[] = [];
-
-  for (const item of rawItems) {
-    if (typeof item !== "object" || item === null) {
-      return null;
-    }
-    const { id, title, description, type } = item as Record<string, unknown>;
-    if (
-      typeof id !== "string" ||
-      typeof title !== "string" ||
-      typeof description !== "string" ||
-      typeof type !== "string"
-    ) {
-      return null;
-    }
-    requirements.push({ id, title, description, type, status: "ai_suggested" });
+  if (!rawItems.every(isValidRequirement)) {
+    return null;
   }
 
+  const requirements = rawItems.map((item) => ({ ...item, status: "ai_suggested" as const }));
   return requirements.length > 0 ? requirements : null;
 }
 
