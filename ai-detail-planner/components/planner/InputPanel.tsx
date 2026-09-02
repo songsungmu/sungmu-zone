@@ -13,6 +13,7 @@ interface InputPanelProps {
   onChange: (patch: Partial<PlannerInput>) => void;
   onSubmit: () => void;
   submitting?: boolean;
+  label?: string;
 }
 
 export function InputPanel({
@@ -20,6 +21,7 @@ export function InputPanel({
   onChange,
   onSubmit,
   submitting = false,
+  label = "AI 상세기획 생성하기",
 }: InputPanelProps) {
   return (
     <aside className="flex w-full shrink-0 flex-col border-b bg-white px-6 py-6 lg:w-80 lg:border-r lg:border-b-0">
@@ -82,7 +84,7 @@ export function InputPanel({
             생성 중...
           </>
         ) : (
-          "AI 상세기획 생성하기"
+          label
         )}
       </Button>
     </aside>
