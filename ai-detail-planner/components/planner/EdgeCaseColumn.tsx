@@ -20,6 +20,7 @@ import type { EdgeCase } from "@/types/planner";
 interface EdgeCaseColumnProps {
   items: EdgeCase[];
   onAdd: (text: string) => void;
+  onToggleStatus?: (id: string) => void;
   isLoading?: boolean;
   isAdding?: boolean;
 }
@@ -27,6 +28,7 @@ interface EdgeCaseColumnProps {
 export function EdgeCaseColumn({
   items,
   onAdd,
+  onToggleStatus,
   isLoading = false,
   isAdding = false,
 }: EdgeCaseColumnProps) {
@@ -91,7 +93,12 @@ export function EdgeCaseColumn({
                       {item.handling}
                     </TableCell>
                     <TableCell className="align-top">
-                      <StatusBadge status={item.status} />
+                      <StatusBadge
+                        status={item.status}
+                        onToggle={
+                          onToggleStatus ? () => onToggleStatus(item.id) : undefined
+                        }
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

@@ -20,6 +20,7 @@ import type { Requirement } from "@/types/planner";
 interface RequirementColumnProps {
   items: Requirement[];
   onAdd: (text: string) => void;
+  onToggleStatus?: (id: string) => void;
   isLoading?: boolean;
   isAdding?: boolean;
 }
@@ -27,6 +28,7 @@ interface RequirementColumnProps {
 export function RequirementColumn({
   items,
   onAdd,
+  onToggleStatus,
   isLoading = false,
   isAdding = false,
 }: RequirementColumnProps) {
@@ -96,7 +98,12 @@ export function RequirementColumn({
                       {item.type}
                     </TableCell>
                     <TableCell className="align-top">
-                      <StatusBadge status={item.status} />
+                      <StatusBadge
+                        status={item.status}
+                        onToggle={
+                          onToggleStatus ? () => onToggleStatus(item.id) : undefined
+                        }
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

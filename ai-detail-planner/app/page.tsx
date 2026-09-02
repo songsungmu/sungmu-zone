@@ -237,6 +237,39 @@ export default function Home() {
     }
   }
 
+  function toggleRequirementStatus(id: string) {
+    setPlanner((prev) => ({
+      ...prev,
+      requirements: prev.requirements.map((item) =>
+        item.id === id
+          ? { ...item, status: item.status === "confirmed" ? "ai_suggested" : "confirmed" }
+          : item
+      ),
+    }));
+  }
+
+  function togglePolicyStatus(id: string) {
+    setPlanner((prev) => ({
+      ...prev,
+      policies: prev.policies.map((item) =>
+        item.id === id
+          ? { ...item, status: item.status === "confirmed" ? "ai_suggested" : "confirmed" }
+          : item
+      ),
+    }));
+  }
+
+  function toggleEdgeCaseStatus(id: string) {
+    setPlanner((prev) => ({
+      ...prev,
+      edgeCases: prev.edgeCases.map((item) =>
+        item.id === id
+          ? { ...item, status: item.status === "confirmed" ? "ai_suggested" : "confirmed" }
+          : item
+      ),
+    }));
+  }
+
   return (
     <div className="flex flex-col bg-slate-50 lg:h-screen lg:flex-row">
       <InputPanel
@@ -273,18 +306,21 @@ export default function Home() {
             <RequirementColumn
               items={planner.requirements}
               onAdd={addRequirement}
+              onToggleStatus={toggleRequirementStatus}
               isLoading={isGeneratingRequirements}
               isAdding={isRefiningRequirements}
             />
             <PolicyColumn
               items={planner.policies}
               onAdd={addPolicy}
+              onToggleStatus={togglePolicyStatus}
               isLoading={isGeneratingPolicies}
               isAdding={isRefiningPolicies}
             />
             <EdgeCaseColumn
               items={planner.edgeCases}
               onAdd={addEdgeCase}
+              onToggleStatus={toggleEdgeCaseStatus}
               isLoading={isGeneratingEdgeCases}
               isAdding={isRefiningEdgeCases}
             />

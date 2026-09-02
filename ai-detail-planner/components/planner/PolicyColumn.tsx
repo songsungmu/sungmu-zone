@@ -20,6 +20,7 @@ import type { Policy } from "@/types/planner";
 interface PolicyColumnProps {
   items: Policy[];
   onAdd: (text: string) => void;
+  onToggleStatus?: (id: string) => void;
   isLoading?: boolean;
   isAdding?: boolean;
 }
@@ -27,6 +28,7 @@ interface PolicyColumnProps {
 export function PolicyColumn({
   items,
   onAdd,
+  onToggleStatus,
   isLoading = false,
   isAdding = false,
 }: PolicyColumnProps) {
@@ -88,7 +90,12 @@ export function PolicyColumn({
                       {item.content}
                     </TableCell>
                     <TableCell className="align-top">
-                      <StatusBadge status={item.status} />
+                      <StatusBadge
+                        status={item.status}
+                        onToggle={
+                          onToggleStatus ? () => onToggleStatus(item.id) : undefined
+                        }
+                      />
                     </TableCell>
                     <TableCell className="align-top text-xs text-slate-500">
                       {item.rationale}
