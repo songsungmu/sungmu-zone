@@ -1,5 +1,6 @@
 "use client";
 
+import { X } from "lucide-react";
 import { useState } from "react";
 
 import { EdgeCaseColumn } from "@/components/planner/EdgeCaseColumn";
@@ -8,7 +9,12 @@ import { PolicyColumn } from "@/components/planner/PolicyColumn";
 import { RequirementColumn } from "@/components/planner/RequirementColumn";
 import { cn } from "@/lib/utils";
 import { initialPlannerState } from "@/lib/mock-planner-data";
-import type { PlannerState } from "@/types/planner";
+import type { PlannerState, Requirement } from "@/types/planner";
+
+interface GenerateRequirementsResponse {
+  requirements?: Requirement[];
+  error?: string;
+}
 
 const STEPS = [
   { key: "requirements", label: "상세 요구사항" },
@@ -18,13 +24,37 @@ const STEPS = [
 
 export default function Home() {
   const [planner, setPlanner] = useState<PlannerState>(initialPlannerState);
+  const [isGeneratingRequirements, setIsGeneratingRequirements] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   function updateInput(patch: Partial<PlannerState["input"]>) {
     setPlanner((prev) => ({ ...prev, input: { ...prev.input, ...patch } }));
   }
 
-  function handleGenerate() {
-    // AI 연동은 이후 Phase에서 구현. 지금은 화면 스켈레톤만 완성.
+  async function handleGenerate() {
+    setIsGeneratingRequirements(true);
+    setErrorMessage(null);
+
+    try {
+      const res = await fetch("/api/generate-requirements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(planner.input),
+      });
+      const data: GenerateRequirementsResponse = await res.json();
+
+      if (!res.ok || !data.requirements) {
+        throw new Error(data.error ?? "요청 처리 중 오류가 발생했습니다.");
+      }
+
+      setPlanner((prev) => ({ ...prev, requirements: data.requirements! }));
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다."
+      );
+    } finally {
+      setIsGeneratingRequirements(false);
+    }
   }
 
   function addRequirement(text: string) {
@@ -76,7 +106,12 @@ export default function Home() {
 
   return (
     <div className="flex flex-col bg-slate-50 lg:h-screen lg:flex-row">
-      <InputPanel value={planner.input} onChange={updateInput} onSubmit={handleGenerate} />
+      <InputPanel
+        value={planner.input}
+        onChange={updateInput}
+        onSubmit={handleGenerate}
+        submitting={isGeneratingRequirements}
+      />
 
       <div className="flex flex-1 flex-col lg:overflow-hidden">
         <header className="flex flex-wrap items-center justify-between gap-3 border-b bg-white px-8 py-4">
@@ -85,6 +120,20 @@ export default function Home() {
           </h1>
           <StepIndicator />
         </header>
+
+        {errorMessage && (
+          <div className="flex items-center justify-between gap-3 border-b border-red-200 bg-red-50 px-8 py-3 text-sm text-red-700">
+            <span>{errorMessage}</span>
+            <button
+              type="button"
+              onClick={() => setErrorMessage(null)}
+              className="shrink-0 rounded p-1 hover:bg-red-100"
+              aria-label="에러 메시지 닫기"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        )}
 
         <main className="flex-1 p-6 lg:overflow-auto">
           <div className="grid grid-cols-1 gap-4 lg:h-full lg:grid-cols-3">

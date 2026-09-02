@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -75,7 +76,14 @@ export function InputPanel({
         onClick={onSubmit}
         disabled={submitting}
       >
-        {submitting ? "생성 중..." : "AI 상세기획 생성하기"}
+        {submitting ? (
+          <>
+            <Loader2 className="animate-spin" />
+            생성 중...
+          </>
+        ) : (
+          "AI 상세기획 생성하기"
+        )}
       </Button>
     </aside>
   );
