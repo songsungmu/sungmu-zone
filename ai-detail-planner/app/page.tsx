@@ -9,10 +9,15 @@ import { PolicyColumn } from "@/components/planner/PolicyColumn";
 import { RequirementColumn } from "@/components/planner/RequirementColumn";
 import { cn } from "@/lib/utils";
 import { initialPlannerState } from "@/lib/mock-planner-data";
-import type { PlannerState, Requirement } from "@/types/planner";
+import type { Policy, PlannerState, Requirement } from "@/types/planner";
 
 interface GenerateRequirementsResponse {
   requirements?: Requirement[];
+  error?: string;
+}
+
+interface GeneratePoliciesResponse {
+  policies?: Policy[];
   error?: string;
 }
 
@@ -25,6 +30,7 @@ const STEPS = [
 export default function Home() {
   const [planner, setPlanner] = useState<PlannerState>(initialPlannerState);
   const [isGeneratingRequirements, setIsGeneratingRequirements] = useState(false);
+  const [isGeneratingPolicies, setIsGeneratingPolicies] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   function updateInput(patch: Partial<PlannerState["input"]>) {
@@ -48,12 +54,44 @@ export default function Home() {
       }
 
       setPlanner((prev) => ({ ...prev, requirements: data.requirements! }));
+      void generatePolicies(data.requirements);
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다."
       );
     } finally {
       setIsGeneratingRequirements(false);
+    }
+  }
+
+  async function generatePolicies(requirements: Requirement[]) {
+    setIsGeneratingPolicies(true);
+    setErrorMessage(null);
+
+    try {
+      const res = await fetch("/api/generate-policies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requirements,
+          functionName: planner.input.functionName,
+          goal: planner.input.goal,
+          target: planner.input.target,
+        }),
+      });
+      const data: GeneratePoliciesResponse = await res.json();
+
+      if (!res.ok || !data.policies) {
+        throw new Error(data.error ?? "세부 정책 생성 중 오류가 발생했습니다.");
+      }
+
+      setPlanner((prev) => ({ ...prev, policies: data.policies! }));
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다."
+      );
+    } finally {
+      setIsGeneratingPolicies(false);
     }
   }
 
@@ -138,7 +176,11 @@ export default function Home() {
         <main className="flex-1 p-6 lg:overflow-auto">
           <div className="grid grid-cols-1 gap-4 lg:h-full lg:grid-cols-3">
             <RequirementColumn items={planner.requirements} onAdd={addRequirement} />
-            <PolicyColumn items={planner.policies} onAdd={addPolicy} />
+            <PolicyColumn
+              items={planner.policies}
+              onAdd={addPolicy}
+              isLoading={isGeneratingPolicies}
+            />
             <EdgeCaseColumn items={planner.edgeCases} onAdd={addEdgeCase} />
           </div>
         </main>
