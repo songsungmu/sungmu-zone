@@ -121,5 +121,5 @@ export const initialPlannerState: PlannerState = {
   requirements: mockRequirements,
   policies: mockPolicies,
   edgeCases: mockEdgeCases,
-  loadingStage: "done",
+  loadingStage: "idle",
 };
