@@ -54,7 +54,12 @@ function parsePolicies(data: unknown): Policy[] | null {
     return null;
   }
 
-  const policies = rawItems.map((item) => ({ ...item, status: "ai_suggested" as const }));
+  // 이 라우트는 첨부 문서를 받지 않으므로 모든 항목은 AI 추론으로 표시한다.
+  const policies = rawItems.map((item) => ({
+    ...item,
+    status: "ai_suggested" as const,
+    source: "inferred" as const,
+  }));
   return policies.length > 0 ? policies : null;
 }
 

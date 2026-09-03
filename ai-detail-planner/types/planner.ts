@@ -1,4 +1,5 @@
 export type PlannerItemStatus = "ai_suggested" | "confirmed";
+export type ItemSource = "document" | "inferred";
 
 export interface Requirement {
   id: string;
@@ -6,6 +7,7 @@ export interface Requirement {
   description: string;
   type: string;
   status: PlannerItemStatus;
+  source: ItemSource;
 }
 
 export interface Policy {
@@ -14,6 +16,7 @@ export interface Policy {
   content: string;
   status: PlannerItemStatus;
   rationale: string;
+  source: ItemSource;
 }
 
 export interface EdgeCase {
@@ -21,6 +24,7 @@ export interface EdgeCase {
   situation: string;
   handling: string;
   status: PlannerItemStatus;
+  source: ItemSource;
 }
 
 export interface PlannerInput {

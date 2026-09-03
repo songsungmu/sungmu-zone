@@ -75,16 +75,29 @@ function parseNewItems(
   const rawItems = (data as Record<string, unknown>)[columnType];
   if (!Array.isArray(rawItems)) return null;
 
+  // 이 라우트는 첨부 문서를 받지 않으므로 모든 항목은 AI 추론으로 표시한다.
   if (columnType === "requirements") {
     if (!rawItems.every(isValidRequirement)) return null;
-    return rawItems.map((item) => ({ ...item, status: "ai_suggested" as const }));
+    return rawItems.map((item) => ({
+      ...item,
+      status: "ai_suggested" as const,
+      source: "inferred" as const,
+    }));
   }
   if (columnType === "policies") {
     if (!rawItems.every(isValidPolicy)) return null;
-    return rawItems.map((item) => ({ ...item, status: "ai_suggested" as const }));
+    return rawItems.map((item) => ({
+      ...item,
+      status: "ai_suggested" as const,
+      source: "inferred" as const,
+    }));
   }
   if (!rawItems.every(isValidEdgeCase)) return null;
-  return rawItems.map((item) => ({ ...item, status: "ai_suggested" as const }));
+  return rawItems.map((item) => ({
+    ...item,
+    status: "ai_suggested" as const,
+    source: "inferred" as const,
+  }));
 }
 
 export async function POST(request: Request) {

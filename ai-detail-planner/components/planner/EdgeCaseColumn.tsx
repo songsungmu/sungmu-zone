@@ -3,6 +3,7 @@
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
+import { SourceIndicator } from "@/components/planner/SourceIndicator";
 import { StatusBadge } from "@/components/planner/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -86,8 +87,13 @@ export function EdgeCaseColumn({
                     <TableCell className="align-top font-mono text-xs text-slate-500">
                       {item.id}
                     </TableCell>
-                    <TableCell className="align-top whitespace-normal text-sm font-semibold text-slate-900">
-                      {item.situation}
+                    <TableCell className="align-top whitespace-normal">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-sm font-semibold text-slate-900">
+                          {item.situation}
+                        </span>
+                        <SourceIndicator source={item.source} />
+                      </div>
                     </TableCell>
                     <TableCell className="align-top whitespace-normal text-xs text-slate-600">
                       {item.handling}

@@ -7,6 +7,7 @@ import { EdgeCaseColumn } from "@/components/planner/EdgeCaseColumn";
 import { InputPanel } from "@/components/planner/InputPanel";
 import { PolicyColumn } from "@/components/planner/PolicyColumn";
 import { RequirementColumn } from "@/components/planner/RequirementColumn";
+import { fileToBase64 } from "@/lib/fileToBase64";
 import { cn } from "@/lib/utils";
 import { initialPlannerState } from "@/lib/mock-planner-data";
 import type {
@@ -16,6 +17,12 @@ import type {
   PlannerState,
   Requirement,
 } from "@/types/planner";
+
+interface AttachmentPayload {
+  mimeType: string;
+  base64Data: string;
+  fileName: string;
+}
 
 interface GenerateRequirementsResponse {
   requirements?: Requirement[];
@@ -64,6 +71,7 @@ async function parseJsonResponse<T>(res: Response): Promise<T> {
 
 export default function Home() {
   const [planner, setPlanner] = useState<PlannerState>(initialPlannerState);
+  const [attachments, setAttachments] = useState<File[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isRefiningRequirements, setIsRefiningRequirements] = useState(false);
   const [isRefiningPolicies, setIsRefiningPolicies] = useState(false);
@@ -85,6 +93,8 @@ export default function Home() {
   const isGeneratingEdgeCases = loadingStage === "edgeCases";
   const isChainRunning =
     isGeneratingRequirements || isGeneratingPolicies || isGeneratingEdgeCases;
+  // 문서 첨부는 순수 부가 정보이므로 필수 텍스트 필드 검증에는 관여하지 않는다.
+  const canGenerate = validateInput() === null;
 
   function updateInput(patch: Partial<PlannerState["input"]>) {
     setPlanner((prev) => ({ ...prev, input: { ...prev.input, ...patch } }));
@@ -119,10 +129,23 @@ export default function Home() {
     setPlanner((prev) => ({ ...prev, loadingStage: "requirements" }));
 
     try {
+      let attachmentPayload: AttachmentPayload[] = [];
+      if (attachments.length > 0) {
+        try {
+          attachmentPayload = await Promise.all(attachments.map(fileToBase64));
+        } catch (fileError) {
+          throw new Error(
+            fileError instanceof Error
+              ? fileError.message
+              : "첨부 파일을 읽는 중 오류가 발생했습니다."
+          );
+        }
+      }
+
       const res = await fetch("/api/generate-requirements", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(planner.input),
+        body: JSON.stringify({ ...planner.input, attachments: attachmentPayload }),
       });
       const data = await parseJsonResponse<GenerateRequirementsResponse>(res);
 
@@ -351,8 +374,11 @@ export default function Home() {
       <InputPanel
         value={planner.input}
         onChange={updateInput}
+        attachments={attachments}
+        onAttachmentsChange={setAttachments}
         onSubmit={handlePrimaryAction}
         submitting={isChainRunning}
+        disabled={!canGenerate}
         label={
           failedStage === "policies"
             ? "세부 정책 생성 재시도"

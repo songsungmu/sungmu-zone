@@ -3,6 +3,7 @@
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
+import { SourceIndicator } from "@/components/planner/SourceIndicator";
 import { StatusBadge } from "@/components/planner/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,8 +84,13 @@ export function PolicyColumn({
                 ))
               : items.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell className="align-top text-sm font-semibold text-slate-900">
-                      {item.policyName}
+                    <TableCell className="align-top">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-sm font-semibold text-slate-900">
+                          {item.policyName}
+                        </span>
+                        <SourceIndicator source={item.source} />
+                      </div>
                     </TableCell>
                     <TableCell className="align-top whitespace-normal text-xs text-slate-600">
                       {item.content}
@@ -97,8 +103,13 @@ export function PolicyColumn({
                         }
                       />
                     </TableCell>
-                    <TableCell className="align-top text-xs text-slate-500">
-                      {item.rationale}
+                    <TableCell className="align-top max-w-20">
+                      <span
+                        className="block truncate text-xs text-slate-500"
+                        title={item.rationale}
+                      >
+                        {item.rationale}
+                      </span>
                     </TableCell>
                   </TableRow>
                 ))}
