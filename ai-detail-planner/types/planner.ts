@@ -32,7 +32,6 @@ export interface PlannerInput {
   requirementDraft: string;
   target: string;
   goal: string;
-  referenceDocText: string;
 }
 
 export type PlannerLoadingStage =

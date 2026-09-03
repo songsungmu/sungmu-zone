@@ -130,15 +130,6 @@ export function InputPanel({
           />
         </Field>
 
-        <Field label="참고 문서 (텍스트 붙여넣기)">
-          <Textarea
-            placeholder="문서 내용을 붙여넣어주세요"
-            rows={4}
-            value={value.referenceDocText}
-            onChange={(e) => onChange({ referenceDocText: e.target.value })}
-          />
-        </Field>
-
         <Field label={`참고 문서 업로드 (PDF, PNG · 최대 ${MAX_ATTACHMENTS}개, 개당 10MB)`}>
           <div
             onClick={() => canAttachMore && fileInputRef.current?.click()}

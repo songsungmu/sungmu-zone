@@ -131,7 +131,6 @@ export const initialPlannerState: PlannerState = {
       "구매 후 포인트가 누락된 사용자가 영수증을 통해 사후 적립할 수 있도록 지원",
     target: "로그인 회원",
     goal: "미적립 관련 CS 문의 감소",
-    referenceDocText: "",
   },
   requirements: mockRequirements,
   policies: mockPolicies,

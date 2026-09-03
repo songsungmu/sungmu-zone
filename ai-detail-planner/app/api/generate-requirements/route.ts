@@ -18,7 +18,6 @@ interface GenerateRequirementsBody {
   requirementDraft: string;
   target: string;
   goal: string;
-  referenceDocText: string;
   attachments?: AttachmentInput[];
 }
 
@@ -35,7 +34,6 @@ const SYSTEM_PROMPT_TEMPLATE = `당신은 15년차 시니어 프로덕트 매니
 [요구사항 초안] {{requirementDraft}}
 [타겟 사용자] {{target}}
 [목표] {{goal}}
-[참고 문서(텍스트)] {{referenceDocText}}
 (첨부 문서는 별도 파일로 함께 전달됨)
 
 지침:
@@ -55,13 +53,12 @@ const SYSTEM_PROMPT_TEMPLATE = `당신은 15년차 시니어 프로덕트 매니
 { "requirements": [ { "id": "FR-01", "title": "짧은 제목", "description": "상세 설명", "type": "기능", "source": "document" } ] }`;
 
 function buildSystemPrompt(
-  body: Pick<GenerateRequirementsBody, "functionName" | "requirementDraft" | "target" | "goal" | "referenceDocText">
+  body: Pick<GenerateRequirementsBody, "functionName" | "requirementDraft" | "target" | "goal">
 ): string {
   return SYSTEM_PROMPT_TEMPLATE.replace("{{functionName}}", body.functionName)
     .replace("{{requirementDraft}}", body.requirementDraft)
     .replace("{{target}}", body.target)
-    .replace("{{goal}}", body.goal)
-    .replace("{{referenceDocText}}", body.referenceDocText || "(없음)");
+    .replace("{{goal}}", body.goal);
 }
 
 function isValidAttachment(item: unknown): item is AttachmentInput {
@@ -138,7 +135,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "잘못된 요청 본문입니다." }, { status: 400 });
   }
 
-  const { functionName, requirementDraft, target, goal, referenceDocText, attachments } = body;
+  const { functionName, requirementDraft, target, goal, attachments } = body;
   if (!functionName || !requirementDraft || !target || !goal) {
     return NextResponse.json(
       { error: "기능명, 요구사항 초안, 타겟, 목표는 필수 입력값입니다." },
@@ -175,13 +172,7 @@ export async function POST(request: Request) {
     const message = await client.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 4096,
-      system: buildSystemPrompt({
-        functionName,
-        requirementDraft,
-        target,
-        goal,
-        referenceDocText: referenceDocText ?? "",
-      }),
+      system: buildSystemPrompt({ functionName, requirementDraft, target, goal }),
       messages: [
         {
           role: "user",
