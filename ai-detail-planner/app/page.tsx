@@ -587,6 +587,20 @@ function ColumnResizeHandle({
       className="absolute inset-y-0 -right-1 hidden w-2 cursor-ew-resize touch-none select-none lg:block"
     >
       <div className="mx-auto h-full w-px bg-transparent transition-colors hover:bg-blue-300 active:bg-blue-400" />
+      <div className="pointer-events-none absolute right-0 bottom-0 flex size-4 items-end justify-end pr-0.5 pb-0.5 text-slate-400">
+        <svg
+          viewBox="0 0 12 12"
+          className="size-2.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        >
+          <path d="M10.5 1.5 1.5 10.5" />
+          <path d="M10.5 5.5 5.5 10.5" />
+          <path d="M10.5 9.5 9.5 10.5" />
+        </svg>
+      </div>
     </div>
   );
 }
