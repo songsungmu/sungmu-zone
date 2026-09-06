@@ -44,7 +44,7 @@ export function PolicyColumn({
   }
 
   return (
-    <Card className="flex flex-col gap-0 overflow-hidden py-0">
+    <Card className="flex w-full shrink-0 grow-0 flex-col gap-0 overflow-hidden py-0 lg:h-full lg:w-[calc(33.333%-0.667rem)] lg:min-w-[280px] lg:max-w-[80vw] lg:resize-x">
       <CardHeader className="border-b py-4">
         <CardTitle className="flex items-center gap-2 text-sm font-semibold text-blue-700">
           2. 세부 정책 (AI 초안)
@@ -54,7 +54,7 @@ export function PolicyColumn({
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="h-80 min-h-40 max-h-[80vh] resize-y overflow-auto px-0 py-0">
+      <CardContent className="flex-1 overflow-auto px-0 py-0">
         <Table>
           <TableHeader>
             <TableRow>

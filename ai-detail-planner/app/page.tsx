@@ -411,7 +411,7 @@ export default function Home() {
         )}
 
         <main className="flex-1 p-6 lg:overflow-auto">
-          <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
+          <div className="flex flex-col gap-4 lg:h-full lg:flex-row lg:overflow-x-auto">
             <RequirementColumn
               items={planner.requirements}
               onAdd={addRequirement}
