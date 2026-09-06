@@ -44,7 +44,7 @@ export function EdgeCaseColumn({
   }
 
   return (
-    <Card className="flex flex-col gap-0 overflow-hidden py-0 lg:h-full">
+    <Card className="flex flex-col gap-0 overflow-hidden py-0">
       <CardHeader className="border-b py-4">
         <CardTitle className="flex items-center gap-2 text-sm font-semibold text-blue-700">
           3. 예외처리 케이스 (AI 초안)
@@ -54,7 +54,7 @@ export function EdgeCaseColumn({
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="flex-1 overflow-auto px-0 py-0">
+      <CardContent className="h-80 min-h-40 max-h-[80vh] resize-y overflow-auto px-0 py-0">
         <Table>
           <TableHeader>
             <TableRow>
