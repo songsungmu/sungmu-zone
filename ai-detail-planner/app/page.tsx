@@ -2,6 +2,7 @@
 
 import { Check, X } from "lucide-react";
 import { useRef, useState } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 
 import { EdgeCaseColumn } from "@/components/planner/EdgeCaseColumn";
 import { InputPanel } from "@/components/planner/InputPanel";
@@ -77,6 +78,101 @@ export default function Home() {
   const [isRefiningPolicies, setIsRefiningPolicies] = useState(false);
   const [isRefiningEdgeCases, setIsRefiningEdgeCases] = useState(false);
   const [failedStage, setFailedStage] = useState<ColumnType | null>(null);
+
+  // 컬럼 가로 크기 수동 조절: 드래그하기 전에는 CSS로 3등분(null), 한 번
+  // 드래그하면 그 컬럼만 px 고정폭으로 전환된다. 네이티브 CSS resize와 달리
+  // 드래그 중 마우스가 스크롤 컨테이너 우측 끝에 가까워지면 자동으로 스크롤을
+  // 밀어줘서, 화면 밖으로 계속 늘릴 수 있다.
+  const [colWidths, setColWidths] = useState<
+    [number | null, number | null, number | null]
+  >([null, null, null]);
+  const columnsRowRef = useRef<HTMLDivElement>(null);
+  const columnRefs = [
+    useRef<HTMLDivElement>(null),
+    useRef<HTMLDivElement>(null),
+    useRef<HTMLDivElement>(null),
+  ] as const;
+  const resizeDragRef = useRef<{
+    index: 0 | 1 | 2;
+    startX: number;
+    startWidth: number;
+    startScrollLeft: number;
+    lastClientX: number;
+    rafId: number;
+  } | null>(null);
+
+  const MIN_COLUMN_WIDTH = 240;
+  const AUTO_SCROLL_EDGE = 48;
+  const AUTO_SCROLL_STEP = 16;
+
+  // mousemove만으로는 마우스가 화면 끝에 멈춰있을 때(실제로 움직이지 않을 때)
+  // 더 이상 이벤트가 발생하지 않아 자동 스크롤이 멈춘다. 매 프레임 실행되는
+  // rAF 루프로 대신 처리해서, 마우스를 끝에 붙이고 가만히 있어도 계속
+  // 스크롤되면서 컬럼이 늘어나도록 한다.
+  function resizeTick() {
+    const drag = resizeDragRef.current;
+    if (!drag) return;
+
+    const container = columnsRowRef.current;
+    if (container) {
+      const rect = container.getBoundingClientRect();
+      if (drag.lastClientX > rect.right - AUTO_SCROLL_EDGE) {
+        container.scrollLeft += AUTO_SCROLL_STEP;
+      } else if (drag.lastClientX < rect.left + AUTO_SCROLL_EDGE) {
+        container.scrollLeft -= AUTO_SCROLL_STEP;
+      }
+
+      const scrollDelta = container.scrollLeft - drag.startScrollLeft;
+      const newWidth = Math.max(
+        MIN_COLUMN_WIDTH,
+        drag.startWidth + (drag.lastClientX - drag.startX) + scrollDelta
+      );
+      setColWidths((prev) => {
+        if (prev[drag.index] === newWidth) return prev;
+        const next: [number | null, number | null, number | null] = [
+          ...prev,
+        ];
+        next[drag.index] = newWidth;
+        return next;
+      });
+    }
+
+    drag.rafId = requestAnimationFrame(resizeTick);
+  }
+
+  function handleResizeMouseMove(e: globalThis.MouseEvent) {
+    const drag = resizeDragRef.current;
+    if (!drag) return;
+    drag.lastClientX = e.clientX;
+  }
+
+  function handleResizeMouseUp() {
+    if (resizeDragRef.current) {
+      cancelAnimationFrame(resizeDragRef.current.rafId);
+    }
+    resizeDragRef.current = null;
+    window.removeEventListener("mousemove", handleResizeMouseMove);
+    window.removeEventListener("mouseup", handleResizeMouseUp);
+  }
+
+  function handleResizeMouseDown(index: 0 | 1 | 2) {
+    return (e: ReactMouseEvent<HTMLDivElement>) => {
+      const el = columnRefs[index].current;
+      const container = columnsRowRef.current;
+      if (!el || !container) return;
+      e.preventDefault();
+      resizeDragRef.current = {
+        index,
+        startX: e.clientX,
+        startWidth: el.getBoundingClientRect().width,
+        startScrollLeft: container.scrollLeft,
+        lastClientX: e.clientX,
+        rafId: requestAnimationFrame(resizeTick),
+      };
+      window.addEventListener("mousemove", handleResizeMouseMove);
+      window.addEventListener("mouseup", handleResizeMouseUp);
+    };
+  }
 
   // React state는 다음 렌더까지 갱신되지 않으므로, 같은 이벤트 루프 틱에서
   // 발생할 수 있는 중복 클릭/중복 호출을 막기 위해 즉시 반영되는 ref로 가드한다.
@@ -411,31 +507,86 @@ export default function Home() {
         )}
 
         <main className="flex-1 p-6 lg:overflow-auto">
-          <div className="flex flex-col gap-4 lg:h-full lg:flex-row lg:overflow-x-auto">
-            <RequirementColumn
-              items={planner.requirements}
-              onAdd={addRequirement}
-              onToggleStatus={toggleRequirementStatus}
-              isLoading={isGeneratingRequirements}
-              isAdding={isRefiningRequirements}
-            />
-            <PolicyColumn
-              items={planner.policies}
-              onAdd={addPolicy}
-              onToggleStatus={togglePolicyStatus}
-              isLoading={isGeneratingPolicies}
-              isAdding={isRefiningPolicies}
-            />
-            <EdgeCaseColumn
-              items={planner.edgeCases}
-              onAdd={addEdgeCase}
-              onToggleStatus={toggleEdgeCaseStatus}
-              isLoading={isGeneratingEdgeCases}
-              isAdding={isRefiningEdgeCases}
-            />
+          <div
+            ref={columnsRowRef}
+            className="flex flex-col gap-4 lg:h-full lg:flex-row lg:overflow-x-auto"
+          >
+            <div
+              ref={columnRefs[0]}
+              className="relative w-full shrink-0 lg:h-full lg:w-[calc(33.333%-0.667rem)] lg:min-w-[280px]"
+              style={colWidths[0] != null ? { width: colWidths[0] } : undefined}
+            >
+              <RequirementColumn
+                items={planner.requirements}
+                onAdd={addRequirement}
+                onToggleStatus={toggleRequirementStatus}
+                isLoading={isGeneratingRequirements}
+                isAdding={isRefiningRequirements}
+              />
+              <ColumnResizeHandle
+                onMouseDown={handleResizeMouseDown(0)}
+                label="1번 영역 가로 크기 조절"
+              />
+            </div>
+
+            <div
+              ref={columnRefs[1]}
+              className="relative w-full shrink-0 lg:h-full lg:w-[calc(33.333%-0.667rem)] lg:min-w-[280px]"
+              style={colWidths[1] != null ? { width: colWidths[1] } : undefined}
+            >
+              <PolicyColumn
+                items={planner.policies}
+                onAdd={addPolicy}
+                onToggleStatus={togglePolicyStatus}
+                isLoading={isGeneratingPolicies}
+                isAdding={isRefiningPolicies}
+              />
+              <ColumnResizeHandle
+                onMouseDown={handleResizeMouseDown(1)}
+                label="2번 영역 가로 크기 조절"
+              />
+            </div>
+
+            <div
+              ref={columnRefs[2]}
+              className="relative w-full shrink-0 lg:h-full lg:w-[calc(33.333%-0.667rem)] lg:min-w-[280px]"
+              style={colWidths[2] != null ? { width: colWidths[2] } : undefined}
+            >
+              <EdgeCaseColumn
+                items={planner.edgeCases}
+                onAdd={addEdgeCase}
+                onToggleStatus={toggleEdgeCaseStatus}
+                isLoading={isGeneratingEdgeCases}
+                isAdding={isRefiningEdgeCases}
+              />
+              <ColumnResizeHandle
+                onMouseDown={handleResizeMouseDown(2)}
+                label="3번 영역 가로 크기 조절"
+              />
+            </div>
           </div>
         </main>
       </div>
+    </div>
+  );
+}
+
+function ColumnResizeHandle({
+  onMouseDown,
+  label,
+}: {
+  onMouseDown: (e: ReactMouseEvent<HTMLDivElement>) => void;
+  label: string;
+}) {
+  return (
+    <div
+      onMouseDown={onMouseDown}
+      role="separator"
+      aria-orientation="vertical"
+      aria-label={label}
+      className="absolute inset-y-0 -right-1 hidden w-2 cursor-ew-resize touch-none select-none lg:block"
+    >
+      <div className="mx-auto h-full w-px bg-transparent transition-colors hover:bg-blue-300 active:bg-blue-400" />
     </div>
   );
 }
