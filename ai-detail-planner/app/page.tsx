@@ -2,6 +2,7 @@
 
 import { Check, X } from "lucide-react";
 import { useRef, useState } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 
 import { EdgeCaseColumn } from "@/components/planner/EdgeCaseColumn";
 import { InputPanel } from "@/components/planner/InputPanel";
@@ -77,6 +78,66 @@ export default function Home() {
   const [isRefiningPolicies, setIsRefiningPolicies] = useState(false);
   const [isRefiningEdgeCases, setIsRefiningEdgeCases] = useState(false);
   const [failedStage, setFailedStage] = useState<ColumnType | null>(null);
+
+  // 세 컬럼의 너비(%) 합이 항상 컨테이너 너비를 넘지 않도록, 구분선을 드래그하면
+  // 양옆 컬럼끼리 너비를 주고받는다. 이렇게 하면 어떤 컬럼도 화면 밖으로 밀려나지
+  // 않고 항상 화면 안에서 조절할 수 있다.
+  const [colWidths, setColWidths] = useState<[number, number, number]>([
+    33.34, 33.33, 33.33,
+  ]);
+  const columnsRowRef = useRef<HTMLDivElement>(null);
+  const dividerDragRef = useRef<{
+    index: 0 | 1;
+    startX: number;
+    startLeft: number;
+    startRight: number;
+    containerWidth: number;
+  } | null>(null);
+
+  const MIN_COLUMN_PERCENT = 15;
+
+  function handleDividerMouseMove(e: globalThis.MouseEvent) {
+    const drag = dividerDragRef.current;
+    if (!drag) return;
+    const deltaPercent =
+      ((e.clientX - drag.startX) / drag.containerWidth) * 100;
+    const pairTotal = drag.startLeft + drag.startRight;
+    const newLeft = Math.min(
+      Math.max(drag.startLeft + deltaPercent, MIN_COLUMN_PERCENT),
+      pairTotal - MIN_COLUMN_PERCENT
+    );
+    const newRight = pairTotal - newLeft;
+
+    setColWidths((prev) => {
+      const next: [number, number, number] = [...prev];
+      next[drag.index] = newLeft;
+      next[drag.index + 1] = newRight;
+      return next;
+    });
+  }
+
+  function handleDividerMouseUp() {
+    dividerDragRef.current = null;
+    window.removeEventListener("mousemove", handleDividerMouseMove);
+    window.removeEventListener("mouseup", handleDividerMouseUp);
+  }
+
+  function handleDividerMouseDown(index: 0 | 1) {
+    return (e: ReactMouseEvent<HTMLDivElement>) => {
+      const containerWidth = columnsRowRef.current?.offsetWidth ?? 0;
+      if (!containerWidth) return;
+      e.preventDefault();
+      dividerDragRef.current = {
+        index,
+        startX: e.clientX,
+        startLeft: colWidths[index],
+        startRight: colWidths[index + 1],
+        containerWidth,
+      };
+      window.addEventListener("mousemove", handleDividerMouseMove);
+      window.addEventListener("mouseup", handleDividerMouseUp);
+    };
+  }
 
   // React state는 다음 렌더까지 갱신되지 않으므로, 같은 이벤트 루프 틱에서
   // 발생할 수 있는 중복 클릭/중복 호출을 막기 위해 즉시 반영되는 ref로 가드한다.
@@ -411,28 +472,64 @@ export default function Home() {
         )}
 
         <main className="flex-1 p-6 lg:overflow-auto">
-          <div className="flex flex-col gap-4 lg:h-full lg:flex-row lg:overflow-x-auto">
-            <RequirementColumn
-              items={planner.requirements}
-              onAdd={addRequirement}
-              onToggleStatus={toggleRequirementStatus}
-              isLoading={isGeneratingRequirements}
-              isAdding={isRefiningRequirements}
+          <div
+            ref={columnsRowRef}
+            className="flex flex-col gap-4 lg:h-full lg:flex-row"
+          >
+            <div
+              className="w-full shrink-0 lg:h-full lg:w-[var(--col-width)]"
+              style={{ ["--col-width" as string]: `${colWidths[0]}%` }}
+            >
+              <RequirementColumn
+                items={planner.requirements}
+                onAdd={addRequirement}
+                onToggleStatus={toggleRequirementStatus}
+                isLoading={isGeneratingRequirements}
+                isAdding={isRefiningRequirements}
+              />
+            </div>
+
+            <div
+              onMouseDown={handleDividerMouseDown(0)}
+              className="hidden shrink-0 cursor-col-resize items-center justify-center rounded transition-colors hover:bg-blue-100 active:bg-blue-200 lg:flex lg:w-1.5"
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="1번, 2번 컬럼 너비 조절"
             />
-            <PolicyColumn
-              items={planner.policies}
-              onAdd={addPolicy}
-              onToggleStatus={togglePolicyStatus}
-              isLoading={isGeneratingPolicies}
-              isAdding={isRefiningPolicies}
+
+            <div
+              className="w-full shrink-0 lg:h-full lg:w-[var(--col-width)]"
+              style={{ ["--col-width" as string]: `${colWidths[1]}%` }}
+            >
+              <PolicyColumn
+                items={planner.policies}
+                onAdd={addPolicy}
+                onToggleStatus={togglePolicyStatus}
+                isLoading={isGeneratingPolicies}
+                isAdding={isRefiningPolicies}
+              />
+            </div>
+
+            <div
+              onMouseDown={handleDividerMouseDown(1)}
+              className="hidden shrink-0 cursor-col-resize items-center justify-center rounded transition-colors hover:bg-blue-100 active:bg-blue-200 lg:flex lg:w-1.5"
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="2번, 3번 컬럼 너비 조절"
             />
-            <EdgeCaseColumn
-              items={planner.edgeCases}
-              onAdd={addEdgeCase}
-              onToggleStatus={toggleEdgeCaseStatus}
-              isLoading={isGeneratingEdgeCases}
-              isAdding={isRefiningEdgeCases}
-            />
+
+            <div
+              className="w-full shrink-0 lg:h-full lg:w-[var(--col-width)]"
+              style={{ ["--col-width" as string]: `${colWidths[2]}%` }}
+            >
+              <EdgeCaseColumn
+                items={planner.edgeCases}
+                onAdd={addEdgeCase}
+                onToggleStatus={toggleEdgeCaseStatus}
+                isLoading={isGeneratingEdgeCases}
+                isAdding={isRefiningEdgeCases}
+              />
+            </div>
           </div>
         </main>
       </div>

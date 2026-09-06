@@ -44,7 +44,7 @@ export function PolicyColumn({
   }
 
   return (
-    <Card className="flex w-full shrink-0 grow-0 flex-col gap-0 overflow-hidden py-0 lg:h-full lg:w-[calc(33.333%-0.667rem)] lg:min-w-[280px] lg:max-w-[80vw] lg:resize-x">
+    <Card className="flex h-full w-full flex-col gap-0 overflow-hidden py-0">
       <CardHeader className="border-b py-4">
         <CardTitle className="flex items-center gap-2 text-sm font-semibold text-blue-700">
           2. 세부 정책 (AI 초안)
