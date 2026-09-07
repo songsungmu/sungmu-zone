@@ -1,0 +1,114 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.5rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+
+  --primary: oklch(0.546 0.245 262.881);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.546 0.245 262.881);
+
+  /* 상태 배지 4종 — 프로젝트 전체에서 이 토큰만 사용 (StatusBadge 컴포넌트 등) */
+  --status-confirmed: oklch(0.962 0.044 156.743);
+  --status-confirmed-foreground: oklch(0.393 0.095 152.535);
+  --status-suggested: oklch(0.932 0.032 255.585);
+  --status-suggested-foreground: oklch(0.424 0.199 265.638);
+  --status-need-decision: oklch(0.962 0.059 95.617);
+  --status-need-decision-foreground: oklch(0.473 0.137 46.201);
+  --status-conflict: oklch(0.936 0.032 17.717);
+  --status-conflict-foreground: oklch(0.444 0.177 26.899);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+
+  --primary: oklch(0.623 0.214 259.815);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.623 0.214 259.815);
+
+  --status-confirmed: oklch(0.393 0.095 152.535 / 35%);
+  --status-confirmed-foreground: oklch(0.871 0.15 154.449);
+  --status-suggested: oklch(0.424 0.199 265.638 / 35%);
+  --status-suggested-foreground: oklch(0.809 0.105 251.813);
+  --status-need-decision: oklch(0.473 0.137 46.201 / 35%);
+  --status-need-decision-foreground: oklch(0.879 0.169 91.605);
+  --status-conflict: oklch(0.444 0.177 26.899 / 35%);
+  --status-conflict-foreground: oklch(0.808 0.114 19.571);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-status-confirmed: var(--status-confirmed);
+  --color-status-confirmed-foreground: var(--status-confirmed-foreground);
+  --color-status-suggested: var(--status-suggested);
+  --color-status-suggested-foreground: var(--status-suggested-foreground);
+  --color-status-need-decision: var(--status-need-decision);
+  --color-status-need-decision-foreground: var(--status-need-decision-foreground);
+  --color-status-conflict: var(--status-conflict);
+  --color-status-conflict-foreground: var(--status-conflict-foreground);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
