@@ -1,10 +1,19 @@
+"use client";
+
+import { useState } from "react";
+
 import { ClaudePanel } from "@/components/workspace/ClaudePanel";
 import { FigmaPanel } from "@/components/workspace/FigmaPanel";
 import { GoogleSheetPanel } from "@/components/workspace/GoogleSheetPanel";
 import { Header } from "@/components/workspace/Header";
 import { ReviewListPanel } from "@/components/workspace/ReviewListPanel";
+import { initialFigmaConnectionState } from "@/types/figma";
 
 export default function WorkspacePage() {
+  // Figma 연결 상태는 여기(상위)에서 관리한다 — Phase 7의 분석 요청 시
+  // 이 값을 그대로 함께 전달해야 하므로 FigmaPanel 내부에 가두지 않는다.
+  const [figma, setFigma] = useState(initialFigmaConnectionState);
+
   return (
     <div className="flex h-screen flex-col bg-secondary/40">
       <Header />
@@ -17,7 +26,7 @@ export default function WorkspacePage() {
       <div className="grid min-h-0 flex-1 grid-rows-[28fr_52fr_20fr] gap-4 p-4">
         {/* 상단 2단 그리드 — 컴팩트하게, 전체 콘텐츠 영역의 28% */}
         <div className="grid min-h-0 grid-cols-1 gap-4 md:grid-cols-2">
-          <FigmaPanel />
+          <FigmaPanel value={figma} onChange={setFigma} />
           <ClaudePanel />
         </div>
 
