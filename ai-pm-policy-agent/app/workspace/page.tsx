@@ -97,7 +97,7 @@ export default function WorkspacePage() {
         {/* 상단 2단 그리드 — 컴팩트하게, 전체 콘텐츠 영역의 28% */}
         <div className="grid min-h-0 grid-cols-1 gap-4 md:grid-cols-2">
           <FigmaPanel value={figma} onChange={setFigma} />
-          <ClaudePanel onAnalysisComplete={setAnalysisResult} />
+          <ClaudePanel figmaFileUrl={figma.url} onAnalysisComplete={setAnalysisResult} />
         </div>
 
         {/* 중단 리뷰 리스트 — 화면에서 가장 큰 비중, 52% */}
