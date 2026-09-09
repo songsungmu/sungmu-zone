@@ -15,11 +15,15 @@ import type {
   PolicyDecision,
   PolicyItem,
 } from "@/types/review";
+import { initialSheetConnectionState } from "@/types/sheet";
 
 export default function WorkspacePage() {
   // Figma 연결 상태는 여기(상위)에서 관리한다 — Phase 7의 분석 요청 시
   // 이 값을 그대로 함께 전달해야 하므로 FigmaPanel 내부에 가두지 않는다.
   const [figma, setFigma] = useState(initialFigmaConnectionState);
+
+  // Google Sheet 연결 상태도 같은 이유로 상위에서 관리한다.
+  const [sheet, setSheet] = useState(initialSheetConnectionState);
 
   // ClaudePanel은 정책/요구사항/예외처리 데이터를 직접 들고 있지 않는다.
   // 분석이 끝나면 결과를 여기로 올려보내고, ReviewListPanel이 이 state를
@@ -113,7 +117,7 @@ export default function WorkspacePage() {
 
         {/* 하단 시트 연결 — 20% */}
         <div className="min-h-0">
-          <GoogleSheetPanel policies={analysisResult.policies} />
+          <GoogleSheetPanel value={sheet} onChange={setSheet} />
         </div>
       </div>
     </div>
