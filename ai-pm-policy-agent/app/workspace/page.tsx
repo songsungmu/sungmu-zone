@@ -8,11 +8,19 @@ import { GoogleSheetPanel } from "@/components/workspace/GoogleSheetPanel";
 import { Header } from "@/components/workspace/Header";
 import { ReviewListPanel } from "@/components/workspace/ReviewListPanel";
 import { initialFigmaConnectionState } from "@/types/figma";
+import type { AnalysisResult } from "@/types/review";
 
 export default function WorkspacePage() {
   // Figma 연결 상태는 여기(상위)에서 관리한다 — Phase 7의 분석 요청 시
   // 이 값을 그대로 함께 전달해야 하므로 FigmaPanel 내부에 가두지 않는다.
   const [figma, setFigma] = useState(initialFigmaConnectionState);
+
+  // ClaudePanel은 정책/요구사항/예외처리 데이터를 직접 들고 있지 않는다.
+  // 분석이 끝나면 결과를 여기로 올려보내고, Phase 4의 ReviewListPanel이
+  // 이 state를 받아 렌더링한다. (아직 이 값을 읽는 곳이 없어 getter는
+  // 비워둠 — Phase 4에서 `const [analysisResult, setAnalysisResult]`로
+  // 다시 채워서 ReviewListPanel에 넘긴다.)
+  const [, setAnalysisResult] = useState<AnalysisResult | null>(null);
 
   return (
     <div className="flex h-screen flex-col bg-secondary/40">
@@ -27,7 +35,7 @@ export default function WorkspacePage() {
         {/* 상단 2단 그리드 — 컴팩트하게, 전체 콘텐츠 영역의 28% */}
         <div className="grid min-h-0 grid-cols-1 gap-4 md:grid-cols-2">
           <FigmaPanel value={figma} onChange={setFigma} />
-          <ClaudePanel />
+          <ClaudePanel onAnalysisComplete={setAnalysisResult} />
         </div>
 
         {/* 중단 리뷰 리스트 — 화면에서 가장 큰 비중, 52% */}
