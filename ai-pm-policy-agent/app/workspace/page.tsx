@@ -6,9 +6,15 @@ import { ClaudePanel } from "@/components/workspace/ClaudePanel";
 import { FigmaPanel } from "@/components/workspace/FigmaPanel";
 import { GoogleSheetPanel } from "@/components/workspace/GoogleSheetPanel";
 import { Header } from "@/components/workspace/Header";
-import { ReviewListPanel } from "@/components/workspace/ReviewListPanel";
+import { ReviewListPanel } from "@/components/workspace/review/ReviewListPanel";
+import { createMockAnalysisResult } from "@/lib/mock-review-data";
 import { initialFigmaConnectionState } from "@/types/figma";
-import type { AnalysisResult } from "@/types/review";
+import type {
+  AnalysisResult,
+  PolicyConflict,
+  PolicyDecision,
+  PolicyItem,
+} from "@/types/review";
 
 export default function WorkspacePage() {
   // Figma 연결 상태는 여기(상위)에서 관리한다 — Phase 7의 분석 요청 시
@@ -16,11 +22,63 @@ export default function WorkspacePage() {
   const [figma, setFigma] = useState(initialFigmaConnectionState);
 
   // ClaudePanel은 정책/요구사항/예외처리 데이터를 직접 들고 있지 않는다.
-  // 분석이 끝나면 결과를 여기로 올려보내고, Phase 4의 ReviewListPanel이
-  // 이 state를 받아 렌더링한다. (아직 이 값을 읽는 곳이 없어 getter는
-  // 비워둠 — Phase 4에서 `const [analysisResult, setAnalysisResult]`로
-  // 다시 채워서 ReviewListPanel에 넘긴다.)
-  const [, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  // 분석이 끝나면 결과를 여기로 올려보내고, ReviewListPanel이 이 state를
+  // 받아 렌더링한다. ReviewListPanel이 이 프로젝트의 핵심 화면이라, 처음
+  // 진입했을 때도 바로 시연 가능하도록 목업 결과로 초기화해둔다.
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult>(() =>
+    createMockAnalysisResult()
+  );
+
+  // 아래 핸들러들은 전부 로컬 state만 바꾼다. 실제 Google Sheet 반영은
+  // CLAUDE.md 규칙대로 Phase 9의 별도 승인 REST 엔드포인트에서만 처리하며,
+  // 이 화면(및 AI 도구 호출 경로)과는 절대 직접 연결하지 않는다.
+
+  function handleApprove(policy: PolicyItem) {
+    setAnalysisResult((prev) => ({
+      ...prev,
+      policies: prev.policies.map((p) =>
+        p.id === policy.id ? { ...p, classification: "confirmed" } : p
+      ),
+    }));
+  }
+
+  function handleReject(policy: PolicyItem) {
+    setAnalysisResult((prev) => ({
+      ...prev,
+      policies: prev.policies.filter((p) => p.id !== policy.id),
+    }));
+  }
+
+  function handleEdit(policy: PolicyItem, newContent: string) {
+    setAnalysisResult((prev) => ({
+      ...prev,
+      policies: prev.policies.map((p) =>
+        p.id === policy.id ? { ...p, content: newContent } : p
+      ),
+    }));
+  }
+
+  function handleDecide(policy: PolicyItem, decision: PolicyDecision) {
+    // 어느 쪽을 선택하든 결정이 내려진 것이므로 need_decision에서 벗어난다.
+    void decision;
+    setAnalysisResult((prev) => ({
+      ...prev,
+      policies: prev.policies.map((p) =>
+        p.id === policy.id ? { ...p, classification: "confirmed" } : p
+      ),
+    }));
+  }
+
+  function handleResolveConflict(
+    conflict: PolicyConflict,
+    resolution: PolicyDecision
+  ) {
+    void resolution;
+    setAnalysisResult((prev) => ({
+      ...prev,
+      conflicts: prev.conflicts.filter((c) => c.id !== conflict.id),
+    }));
+  }
 
   return (
     <div className="flex h-screen flex-col bg-secondary/40">
@@ -40,7 +98,17 @@ export default function WorkspacePage() {
 
         {/* 중단 리뷰 리스트 — 화면에서 가장 큰 비중, 52% */}
         <div className="min-h-0">
-          <ReviewListPanel />
+          <ReviewListPanel
+            requirements={analysisResult.requirements}
+            policies={analysisResult.policies}
+            exceptions={analysisResult.exceptions}
+            conflicts={analysisResult.conflicts}
+            onApprove={handleApprove}
+            onReject={handleReject}
+            onEdit={handleEdit}
+            onDecide={handleDecide}
+            onResolveConflict={handleResolveConflict}
+          />
         </div>
 
         {/* 하단 시트 연결 — 20% */}

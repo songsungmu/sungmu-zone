@@ -11,6 +11,7 @@ import {
   ToolCallLog,
   type ToolCallLogEntry,
 } from "@/components/workspace/ToolCallLog";
+import { createMockAnalysisResult } from "@/lib/mock-review-data";
 import type { AnalysisResult } from "@/types/review";
 
 const MOCK_TOOL_STEPS: Omit<ToolCallLogEntry, "status">[] = [
@@ -18,59 +19,6 @@ const MOCK_TOOL_STEPS: Omit<ToolCallLogEntry, "status">[] = [
   { id: "policy", label: 'read_policy_sheet("적립 정책 v3")' },
   { id: "compare", label: "compare_requirements_with_policy()" },
 ];
-
-const MOCK_ANALYSIS_ITEMS: Pick<
-  AnalysisResult,
-  "requirements" | "policies" | "edgeCases"
-> = {
-  requirements: [
-    {
-      id: "FR-01",
-      title: "영수증 등록",
-      description: "사용자는 영수증 이미지를 등록할 수 있다.",
-      status: "confirmed",
-    },
-    {
-      id: "FR-02",
-      title: "사후 적립 신청",
-      description: "등록된 영수증을 기준으로 사후 적립을 신청할 수 있다.",
-      status: "suggested",
-    },
-  ],
-  policies: [
-    {
-      id: "PL-01",
-      title: "적립 가능 기간",
-      description: "구매 후 30일 이내",
-      status: "confirmed",
-    },
-    {
-      id: "PL-02",
-      title: "중복 적립 제한",
-      description: "동일 영수증 1회만 적립 가능",
-      status: "need-decision",
-    },
-    {
-      id: "PL-03",
-      title: "적립 한도",
-      description: "화면설계서엔 없음, 정책 시트엔 1회 최대 10,000P",
-      status: "conflict",
-    },
-  ],
-  edgeCases: [
-    {
-      id: "EC-01",
-      title: "OCR 실패",
-      description: "영수증 인식 불가 → 재촬영 요청",
-      status: "suggested",
-    },
-  ],
-};
-
-const MOCK_TOTAL_ITEM_COUNT =
-  MOCK_ANALYSIS_ITEMS.requirements.length +
-  MOCK_ANALYSIS_ITEMS.policies.length +
-  MOCK_ANALYSIS_ITEMS.edgeCases.length;
 
 function wait(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -124,11 +72,7 @@ export function ClaudePanel({ onAnalysisComplete }: ClaudePanelProps) {
 
     if (!isMountedRef.current) return;
 
-    const result: AnalysisResult = {
-      ...MOCK_ANALYSIS_ITEMS,
-      summary: `정책 ${MOCK_TOTAL_ITEM_COUNT}건을 분석했어요. 아래 리스트에서 확인해 주세요. (목업 응답)`,
-      generatedAt: new Date().toISOString(),
-    };
+    const result: AnalysisResult = createMockAnalysisResult();
     setSummaryText(result.summary);
     setIsAnalyzing(false);
     onAnalysisComplete(result);
