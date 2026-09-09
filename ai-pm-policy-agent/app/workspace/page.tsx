@@ -113,7 +113,7 @@ export default function WorkspacePage() {
 
         {/* 하단 시트 연결 — 20% */}
         <div className="min-h-0">
-          <GoogleSheetPanel />
+          <GoogleSheetPanel policies={analysisResult.policies} />
         </div>
       </div>
     </div>
