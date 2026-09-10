@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { ClaudePanel } from "@/components/workspace/ClaudePanel";
 import { FigmaPanel } from "@/components/workspace/FigmaPanel";
@@ -74,11 +74,20 @@ export default function WorkspacePage() {
   // lib/mcp-response-mapping.ts)와 코드 레벨에서 완전히 분리되어 있다 —
   // 같은 함수를 호출하지 않고 Claude API도 전혀 부르지 않는다.
 
+  // pendingPolicyIds(state)는 버튼 disabled 표시용이고, 실제 "이미 처리
+  // 중인가" 판정은 이 ref로 한다 — state 갱신은 리렌더를 거쳐야 반영되므로
+  // 아주 빠르게 두 번 클릭되면(자동화 클릭 등) 그 사이에 두 요청이 모두
+  // 시작될 수 있다. ref는 동기적으로 즉시 갱신되어 그 틈을 없앤다.
+  const pendingIdsRef = useRef<Set<string>>(new Set());
+
   async function withPending(id: string, fn: () => Promise<void>) {
+    if (pendingIdsRef.current.has(id)) return;
+    pendingIdsRef.current.add(id);
     setPendingPolicyIds((prev) => new Set(prev).add(id));
     try {
       await fn();
     } finally {
+      pendingIdsRef.current.delete(id);
       setPendingPolicyIds((prev) => {
         const next = new Set(prev);
         next.delete(id);
