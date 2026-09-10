@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 
+import { saveAnalysisResult } from "@/lib/core/supabase";
 import { parseMcpAnalysisResponse } from "@/lib/mcp-response-mapping";
 import type { ChatAnalyzeResponse, ChatMessage } from "@/types/chat";
 
@@ -62,6 +63,23 @@ export async function POST(request: Request) {
     });
 
     const result: ChatAnalyzeResponse = parseMcpAnalysisResponse(response.content);
+
+    // Phase 10: 새로고침해도 유지되도록 분석 결과를 저장한다. 실제로 뭔가
+    // 분석됐을 때만 project 행을 만든다 — 도구 호출 없이 끝난 잡담 턴까지
+    // 빈 프로젝트로 남기지 않기 위함이다. 베스트에포트라 실패해도 이
+    // 응답 자체는 그대로 반환한다.
+    if (result.requirements.length > 0 || result.policies.length > 0) {
+      await saveAnalysisResult({
+        figmaFileUrl: body.figmaFileUrl?.trim() || null,
+        requirements: result.requirements,
+        policies: result.policies,
+        exceptions: result.exceptions,
+        conflicts: result.conflicts,
+      }).catch((error) => {
+        console.warn("분석 결과 저장 중 오류(무시하고 계속):", error);
+      });
+    }
+
     return NextResponse.json(result);
   } catch (error) {
     console.error("분석 요청 처리 중 오류:", error);

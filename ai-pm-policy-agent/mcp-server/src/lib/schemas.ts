@@ -68,4 +68,6 @@ export const exceptionItemSchema = z.object({
   situation: z.string(),
   handling: z.string(),
   category: exceptionCategorySchema,
+  /** 이 예외를 발생시킨 requirement.id 또는 policy.id — Phase 10 trace_links용. */
+  sourceRef: z.string().nullable(),
 });

@@ -38,6 +38,8 @@ export interface ExceptionItem {
   situation: string;
   handling: string;
   category: ExceptionCategory;
+  /** 이 예외를 발생시킨 RequirementItem.id 또는 PolicyItem.id — Phase 10 trace_links용. */
+  sourceRef?: string | null;
 }
 
 export interface PolicyConflict {
@@ -45,6 +47,10 @@ export interface PolicyConflict {
   title: string;
   existingPolicy: string;
   newPolicy: string;
+  /** 시트의 기존 정책 ID(POL-XXX) — Phase 10 trace_links용. */
+  existingPolicyRef?: string;
+  /** 이 세션에서 새로 도출된 정책의 PolicyItem.id — Phase 10 trace_links용. */
+  newPolicyId?: string;
 }
 
 /**

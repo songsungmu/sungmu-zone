@@ -18,7 +18,7 @@ Next.js 앱 쪽)에서 처리한다.
 | `analyze_requirements` | Figma 프레임 + 프로젝트 설명 → 요구사항 후보 |
 | `analyze_policies` | 요구사항 + 기존 정책 → 분류(confirmed/suggested/need_decision) + 충돌 목록 |
 | `analyze_exceptions` | 요구사항 + 정책 → 예외처리 케이스(system/policy/user/boundary) |
-| `get_change_impact` | 정책 변경 영향도 분석 — 현재 스텁, Phase 10에서 완성 |
+| `get_change_impact` | Google Sheet Policy ID(POL-XXX)로 연결된 요구사항/정책/예외처리를 Supabase trace_links에서 조회 (Phase 10) |
 
 ## 로컬 실행
 
@@ -47,6 +47,8 @@ npm start
 | `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Google 서비스 계정 이메일 |
 | `GOOGLE_PRIVATE_KEY` | 서비스 계정 private key (플랫폼 환경변수 입력 시 개행이 `\n`으로 이스케이프되는 경우가 많음 — 코드에서 자동 변환한다) |
 | `GOOGLE_SHEET_ID` | 정책이 저장된 Google Sheet ID |
+| `SUPABASE_URL` | `get_change_impact`가 trace_links 등을 읽기 전용으로 조회할 Supabase 프로젝트 URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | 위 Supabase 프로젝트의 서비스 롤 키 (읽기 전용 용도로만 사용) |
 
 ## 배포 — Railway
 

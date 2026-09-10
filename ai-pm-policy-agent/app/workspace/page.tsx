@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ClaudePanel } from "@/components/workspace/ClaudePanel";
 import { FigmaPanel } from "@/components/workspace/FigmaPanel";
@@ -36,10 +36,29 @@ export default function WorkspacePage() {
   // ClaudePanel은 정책/요구사항/예외처리 데이터를 직접 들고 있지 않는다.
   // 분석이 끝나면 결과를 여기로 올려보내고, ReviewListPanel이 이 state를
   // 받아 렌더링한다. ReviewListPanel이 이 프로젝트의 핵심 화면이라, 처음
-  // 진입했을 때도 바로 시연 가능하도록 목업 결과로 초기화해둔다.
+  // 진입했을 때도 바로 시연 가능하도록 일단 목업 결과로 초기화해둔다 —
+  // 아래 effect가 Supabase에 저장된 최근 분석이 있으면 그걸로 덮어쓴다
+  // (Phase 10, 새로고침해도 리뷰 리스트가 사라지지 않도록).
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult>(() =>
     createMockAnalysisResult()
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/projects/latest")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { result: AnalysisResult | null } | null) => {
+        if (!cancelled && data?.result) {
+          setAnalysisResult(data.result);
+        }
+      })
+      .catch((error) => {
+        console.warn("최근 분석 결과 복원 실패(목업 데이터 유지):", error);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // 승인/반려/결정 요청이 진행 중인 정책 id 집합 — 중복 클릭 방지 및
   // PolicyCard의 "처리 중..." 표시에 쓴다.

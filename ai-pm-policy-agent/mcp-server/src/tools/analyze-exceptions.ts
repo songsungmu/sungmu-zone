@@ -39,6 +39,7 @@ export function registerAnalyzeExceptionsTool(server: McpServer) {
             situation: `"${requirement.title}" 처리 중 시스템 오류가 발생한 경우`,
             handling: "오류 메시지를 표시하고 사용자가 다시 시도할 수 있도록 안내한다.",
             category: "system",
+            sourceRef: requirement.id,
           });
         }
         if (USER_KEYWORDS.some((kw) => requirement.description.includes(kw))) {
@@ -47,6 +48,7 @@ export function registerAnalyzeExceptionsTool(server: McpServer) {
             situation: `"${requirement.title}" 단계에서 필수 입력이 누락된 경우`,
             handling: "제출을 막고 누락된 항목을 강조 표시한다.",
             category: "user",
+            sourceRef: requirement.id,
           });
         }
       }
@@ -58,6 +60,7 @@ export function registerAnalyzeExceptionsTool(server: McpServer) {
             situation: `"${policy.policyName}" 정책 결정이 아직 내려지지 않은 상태에서 관련 케이스가 발생한 경우`,
             handling: "결정이 완료될 때까지 기존 정책 기준으로 보수적으로 처리한다.",
             category: "policy",
+            sourceRef: policy.id,
           });
         }
 
@@ -68,6 +71,7 @@ export function registerAnalyzeExceptionsTool(server: McpServer) {
             situation: `"${policy.policyName}" 기준값(${numberMatch[0]})과 정확히 일치하는 경계 케이스`,
             handling: "기준값 포함 여부(이상/이하 등)를 명확히 정의해 일관되게 처리한다.",
             category: "boundary",
+            sourceRef: policy.id,
           });
         }
       }

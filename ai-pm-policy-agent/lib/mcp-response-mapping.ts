@@ -125,6 +125,9 @@ export function parseMcpAnalysisResponse(
       "(기존 정책 원문을 찾을 수 없습니다)",
     newPolicy:
       newPolicyContentById.get(c.newPolicyId) ?? "(신규 정책 원문을 찾을 수 없습니다)",
+    // Phase 10 trace_links가 conflicts_with 관계를 기록할 때 원본 참조로 쓴다.
+    existingPolicyRef: c.existingPolicyRef,
+    newPolicyId: c.newPolicyId,
   }));
 
   const exceptions =
