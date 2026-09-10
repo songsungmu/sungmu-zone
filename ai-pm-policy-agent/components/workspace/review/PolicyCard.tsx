@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ function classificationLabel(classification: PolicyClassification) {
 
 interface PolicyCardProps {
   policy: PolicyItem;
+  isSubmitting?: boolean;
   onApprove: (policy: PolicyItem) => void;
   onReject: (policy: PolicyItem) => void;
   onEdit: (policy: PolicyItem, newContent: string) => void;
@@ -41,6 +42,7 @@ interface PolicyCardProps {
 
 export function PolicyCard({
   policy,
+  isSubmitting = false,
   onApprove,
   onReject,
   onEdit,
@@ -68,8 +70,10 @@ export function PolicyCard({
     setIsDecisionOpen(false);
   }
 
+  const isRejected = policy.approvalStatus === "rejected";
+
   return (
-    <Card className="py-0">
+    <Card className={isRejected ? "py-0 opacity-50" : "py-0"}>
       <CardContent className="space-y-3 px-4 py-3">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -78,6 +82,11 @@ export function PolicyCard({
                 {policy.id}
               </span>
               <span className="text-sm font-semibold">{policy.title}</span>
+              {isRejected && (
+                <span className="text-[11px] font-medium text-muted-foreground">
+                  반려됨
+                </span>
+              )}
             </div>
 
             {isEditing ? (
@@ -98,6 +107,13 @@ export function PolicyCard({
                 근거: {policy.rationale}
               </p>
             )}
+
+            {policy.approvalStatus === "approved" && (
+              <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-status-confirmed-foreground">
+                <CheckCircle2 className="size-3" />
+                정책 시트에 반영됨
+              </p>
+            )}
           </div>
 
           <Badge
@@ -111,25 +127,32 @@ export function PolicyCard({
         {/* confirmed: 액션 없음, 배지만 */}
 
         {policy.classification === "suggested" &&
+          !isRejected &&
           (isEditing ? (
             <div className="flex gap-2">
-              <Button size="sm" onClick={handleSaveEdit}>
+              <Button size="sm" onClick={handleSaveEdit} disabled={isSubmitting}>
                 저장
               </Button>
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => setIsEditing(false)}
+                disabled={isSubmitting}
               >
                 취소
               </Button>
             </div>
           ) : (
             <div className="flex gap-2">
-              <Button size="sm" onClick={() => onApprove(policy)}>
-                승인
+              <Button size="sm" onClick={() => onApprove(policy)} disabled={isSubmitting}>
+                {isSubmitting ? "처리 중..." : "승인"}
               </Button>
-              <Button size="sm" variant="outline" onClick={handleStartEdit}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleStartEdit}
+                disabled={isSubmitting}
+              >
                 수정
               </Button>
               <Button
@@ -137,6 +160,7 @@ export function PolicyCard({
                 variant="outline"
                 className="text-destructive hover:text-destructive"
                 onClick={() => onReject(policy)}
+                disabled={isSubmitting}
               >
                 반려
               </Button>
@@ -176,8 +200,8 @@ export function PolicyCard({
                   />
                   신규 정책 적용
                 </label>
-                <Button size="sm" onClick={handleConfirmDecision}>
-                  결정 완료
+                <Button size="sm" onClick={handleConfirmDecision} disabled={isSubmitting}>
+                  {isSubmitting ? "처리 중..." : "결정 완료"}
                 </Button>
               </div>
             )}

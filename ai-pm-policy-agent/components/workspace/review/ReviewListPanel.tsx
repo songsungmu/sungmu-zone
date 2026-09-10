@@ -25,6 +25,7 @@ interface ReviewListPanelProps {
   policies: PolicyItem[];
   exceptions: ExceptionItem[];
   conflicts: PolicyConflict[];
+  pendingPolicyIds?: Set<string>;
   onApprove: (policy: PolicyItem) => void;
   onReject: (policy: PolicyItem) => void;
   onEdit: (policy: PolicyItem, newContent: string) => void;
@@ -37,6 +38,7 @@ export function ReviewListPanel({
   policies,
   exceptions,
   conflicts,
+  pendingPolicyIds = new Set(),
   onApprove,
   onReject,
   onEdit,
@@ -95,6 +97,7 @@ export function ReviewListPanel({
                 <PolicyGroup
                   classification="need_decision"
                   policies={needDecisionPolicies}
+                  pendingPolicyIds={pendingPolicyIds}
                   onApprove={onApprove}
                   onReject={onReject}
                   onEdit={onEdit}
@@ -103,6 +106,7 @@ export function ReviewListPanel({
                 <PolicyGroup
                   classification="suggested"
                   policies={suggestedPolicies}
+                  pendingPolicyIds={pendingPolicyIds}
                   onApprove={onApprove}
                   onReject={onReject}
                   onEdit={onEdit}
@@ -111,6 +115,7 @@ export function ReviewListPanel({
                 <PolicyGroup
                   classification="confirmed"
                   policies={confirmedPolicies}
+                  pendingPolicyIds={pendingPolicyIds}
                   onApprove={onApprove}
                   onReject={onReject}
                   onEdit={onEdit}

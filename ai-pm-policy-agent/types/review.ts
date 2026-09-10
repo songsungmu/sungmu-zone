@@ -2,6 +2,17 @@ export type PolicyClassification = "confirmed" | "suggested" | "need_decision";
 export type ExceptionCategory = "system" | "policy" | "user" | "boundary";
 export type PolicyDecision = "keep_existing" | "apply_new";
 
+/**
+ * ai_suggested: 이 분석 세션에서 AI가 새로 제안한 정책 — 승인 시 시트에
+ *   새 행을 추가한다(appendPolicy).
+ * company_sheet: 원래 정책 시트에 이미 있던 정책 — 승인해도 새 행을
+ *   추가하지 않고 상태만 갱신한다(updatePolicyStatus).
+ */
+export type PolicySourceType = "ai_suggested" | "company_sheet";
+
+/** Phase 9 승인/반려 결과 — 백엔드 classification과 별개인 프론트 전용 UI 상태. */
+export type PolicyApprovalStatus = "approved" | "rejected";
+
 export interface RequirementItem {
   id: string;
   title: string;
@@ -16,6 +27,10 @@ export interface PolicyItem {
   content: string;
   classification: PolicyClassification;
   rationale?: string;
+  sourceType?: PolicySourceType;
+  /** ai_suggested면 근거가 된 RequirementItem.id, company_sheet면 시트의 실제 Policy ID(POL-XXX). */
+  sourceRef?: string | null;
+  approvalStatus?: PolicyApprovalStatus;
 }
 
 export interface ExceptionItem {

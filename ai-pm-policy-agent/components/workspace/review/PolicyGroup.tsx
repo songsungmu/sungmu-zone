@@ -26,6 +26,7 @@ const GROUP_META: Record<
 interface PolicyGroupProps {
   classification: PolicyClassification;
   policies: PolicyItem[];
+  pendingPolicyIds: Set<string>;
   onApprove: (policy: PolicyItem) => void;
   onReject: (policy: PolicyItem) => void;
   onEdit: (policy: PolicyItem, newContent: string) => void;
@@ -35,6 +36,7 @@ interface PolicyGroupProps {
 export function PolicyGroup({
   classification,
   policies,
+  pendingPolicyIds,
   onApprove,
   onReject,
   onEdit,
@@ -44,16 +46,24 @@ export function PolicyGroup({
 
   const meta = GROUP_META[classification];
 
+  // 반려된 카드는 지우지 않고 흐리게 표시한 채 그룹 하단으로 내린다.
+  const sortedPolicies = [...policies].sort((a, b) => {
+    const aRejected = a.approvalStatus === "rejected" ? 1 : 0;
+    const bRejected = b.approvalStatus === "rejected" ? 1 : 0;
+    return aRejected - bRejected;
+  });
+
   return (
     <div className="space-y-2">
       <h3 className={`text-sm font-semibold ${meta.colorClassName}`}>
         {meta.label} <span className="text-muted-foreground">· {policies.length}건</span>
       </h3>
       <div className="space-y-2">
-        {policies.map((policy) => (
+        {sortedPolicies.map((policy) => (
           <PolicyCard
             key={policy.id}
             policy={policy}
+            isSubmitting={pendingPolicyIds.has(policy.id)}
             onApprove={onApprove}
             onReject={onReject}
             onEdit={onEdit}

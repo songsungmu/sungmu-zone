@@ -6,6 +6,7 @@ import { ClaudePanel } from "@/components/workspace/ClaudePanel";
 import { FigmaPanel } from "@/components/workspace/FigmaPanel";
 import { GoogleSheetPanel } from "@/components/workspace/GoogleSheetPanel";
 import { Header } from "@/components/workspace/Header";
+import { DuplicateConfirmDialog } from "@/components/workspace/review/DuplicateConfirmDialog";
 import { ReviewListPanel } from "@/components/workspace/review/ReviewListPanel";
 import { createMockAnalysisResult } from "@/lib/mock-review-data";
 import { initialFigmaConnectionState } from "@/types/figma";
@@ -16,6 +17,13 @@ import type {
   PolicyItem,
 } from "@/types/review";
 import { initialSheetConnectionState } from "@/types/sheet";
+
+interface ApproveApiResponse {
+  policyId?: string;
+  needsConfirmation?: boolean;
+  reason?: string;
+  error?: string;
+}
 
 export default function WorkspacePage() {
   // Figma 연결 상태는 여기(상위)에서 관리한다 — Phase 7의 분석 요청 시
@@ -33,44 +41,132 @@ export default function WorkspacePage() {
     createMockAnalysisResult()
   );
 
-  // 아래 핸들러들은 전부 로컬 state만 바꾼다. 실제 Google Sheet 반영은
-  // CLAUDE.md 규칙대로 Phase 9의 별도 승인 REST 엔드포인트에서만 처리하며,
-  // 이 화면(및 AI 도구 호출 경로)과는 절대 직접 연결하지 않는다.
+  // 승인/반려/결정 요청이 진행 중인 정책 id 집합 — 중복 클릭 방지 및
+  // PolicyCard의 "처리 중..." 표시에 쓴다.
+  const [pendingPolicyIds, setPendingPolicyIds] = useState<Set<string>>(new Set());
+  // checkDuplicateBeforeAppend가 true를 반환했을 때만 채워지는 확인 모달 상태.
+  const [duplicateConfirm, setDuplicateConfirm] = useState<{
+    policy: PolicyItem;
+    reason: string;
+  } | null>(null);
 
-  function handleApprove(policy: PolicyItem) {
+  // 아래 핸들러들은 Phase 9의 승인 REST 엔드포인트(app/api/policies/*)를
+  // 호출한다. 이 경로는 Phase 7의 채팅/AI 경로(app/api/chat,
+  // lib/mcp-response-mapping.ts)와 코드 레벨에서 완전히 분리되어 있다 —
+  // 같은 함수를 호출하지 않고 Claude API도 전혀 부르지 않는다.
+
+  async function withPending(id: string, fn: () => Promise<void>) {
+    setPendingPolicyIds((prev) => new Set(prev).add(id));
+    try {
+      await fn();
+    } finally {
+      setPendingPolicyIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  }
+
+  async function submitApprove(policy: PolicyItem, force = false) {
+    const res = await fetch("/api/policies/approve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ policy, figmaFileUrl: figma.url, force }),
+    });
+    const data = (await res.json().catch(() => ({}))) as ApproveApiResponse;
+
+    if (!res.ok) {
+      console.error("정책 승인 실패:", data.error);
+      return;
+    }
+
+    if (data.needsConfirmation) {
+      setDuplicateConfirm({
+        policy,
+        reason: data.reason ?? "이미 유사한 정책이 있습니다.",
+      });
+      return;
+    }
+
     setAnalysisResult((prev) => ({
       ...prev,
       policies: prev.policies.map((p) =>
-        p.id === policy.id ? { ...p, classification: "confirmed" } : p
+        p.id === policy.id
+          ? { ...p, classification: "confirmed", approvalStatus: "approved" }
+          : p
       ),
     }));
+  }
+
+  function handleApprove(policy: PolicyItem) {
+    void withPending(policy.id, () => submitApprove(policy));
+  }
+
+  function handleConfirmDuplicate() {
+    if (!duplicateConfirm) return;
+    const { policy } = duplicateConfirm;
+    setDuplicateConfirm(null);
+    void withPending(policy.id, () => submitApprove(policy, true));
+  }
+
+  function handleCancelDuplicate() {
+    setDuplicateConfirm(null);
   }
 
   function handleReject(policy: PolicyItem) {
-    setAnalysisResult((prev) => ({
-      ...prev,
-      policies: prev.policies.filter((p) => p.id !== policy.id),
-    }));
+    void withPending(policy.id, async () => {
+      const res = await fetch("/api/policies/reject", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ policyId: policy.id }),
+      });
+      if (!res.ok) {
+        console.error("정책 반려 실패");
+        return;
+      }
+      setAnalysisResult((prev) => ({
+        ...prev,
+        policies: prev.policies.map((p) =>
+          p.id === policy.id ? { ...p, approvalStatus: "rejected" } : p
+        ),
+      }));
+    });
   }
 
   function handleEdit(policy: PolicyItem, newContent: string) {
+    const updatedPolicy = { ...policy, content: newContent };
     setAnalysisResult((prev) => ({
       ...prev,
-      policies: prev.policies.map((p) =>
-        p.id === policy.id ? { ...p, content: newContent } : p
-      ),
+      policies: prev.policies.map((p) => (p.id === policy.id ? updatedPolicy : p)),
     }));
+    void withPending(policy.id, () => submitApprove(updatedPolicy));
   }
 
   function handleDecide(policy: PolicyItem, decision: PolicyDecision) {
-    // 어느 쪽을 선택하든 결정이 내려진 것이므로 need_decision에서 벗어난다.
-    void decision;
-    setAnalysisResult((prev) => ({
-      ...prev,
-      policies: prev.policies.map((p) =>
-        p.id === policy.id ? { ...p, classification: "confirmed" } : p
-      ),
-    }));
+    void withPending(policy.id, async () => {
+      const res = await fetch("/api/policies/decide", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ policyId: policy.id, selectedOption: decision }),
+      });
+      if (!res.ok) {
+        console.error("결정 기록 실패");
+        return;
+      }
+
+      if (decision === "apply_new") {
+        await submitApprove(policy);
+      } else {
+        // 기존 정책 유지 — 시트에는 반영하지 않고 결정만 확정 처리한다.
+        setAnalysisResult((prev) => ({
+          ...prev,
+          policies: prev.policies.map((p) =>
+            p.id === policy.id ? { ...p, classification: "confirmed" } : p
+          ),
+        }));
+      }
+    });
   }
 
   function handleResolveConflict(
@@ -107,6 +203,7 @@ export default function WorkspacePage() {
             policies={analysisResult.policies}
             exceptions={analysisResult.exceptions}
             conflicts={analysisResult.conflicts}
+            pendingPolicyIds={pendingPolicyIds}
             onApprove={handleApprove}
             onReject={handleReject}
             onEdit={handleEdit}
@@ -120,6 +217,14 @@ export default function WorkspacePage() {
           <GoogleSheetPanel value={sheet} onChange={setSheet} />
         </div>
       </div>
+
+      {duplicateConfirm && (
+        <DuplicateConfirmDialog
+          reason={duplicateConfirm.reason}
+          onConfirm={handleConfirmDuplicate}
+          onCancel={handleCancelDuplicate}
+        />
+      )}
     </div>
   );
 }

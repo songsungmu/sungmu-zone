@@ -106,6 +106,10 @@ export function parseMcpAnalysisResponse(
     content: p.content,
     classification: p.classification,
     rationale: p.rationale,
+    // Phase 9 승인 API가 append(신규 정책) vs update(기존 정책 상태 변경)를
+    // 결정할 때 쓴다. existing -> company_sheet, inferred -> ai_suggested.
+    sourceType: p.sourceType === "existing" ? "company_sheet" : "ai_suggested",
+    sourceRef: p.sourceRef,
   }));
 
   const newPolicyContentById = new Map(rawPolicies.map((p) => [p.id, p.content]));

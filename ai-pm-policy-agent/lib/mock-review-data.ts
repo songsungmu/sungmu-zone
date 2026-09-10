@@ -123,36 +123,42 @@ const mockPolicies: PolicyItem[] = [
     title: "적립 가능 기간",
     content: "구매 후 30일 이내 건만 사후 적립 신청이 가능하다.",
     classification: "confirmed",
+    sourceType: "company_sheet",
   },
   {
     id: "PL-02",
     title: "중복 적립 제한",
     content: "동일 영수증으로는 1회만 적립 신청이 가능하다.",
     classification: "confirmed",
+    sourceType: "company_sheet",
   },
   {
     id: "PL-03",
     title: "적립 대상",
     content: "로그인 회원만 사후 적립을 신청할 수 있다.",
     classification: "confirmed",
+    sourceType: "company_sheet",
   },
   {
     id: "PL-04",
     title: "적립 제외 거래",
     content: "환불이 완료된 거래는 적립 대상에서 제외한다.",
     classification: "confirmed",
+    sourceType: "company_sheet",
   },
   {
     id: "PL-05",
     title: "처리 기한",
     content: "신청 접수 후 영업일 기준 5일 이내에 처리한다.",
     classification: "confirmed",
+    sourceType: "company_sheet",
   },
   {
     id: "PL-06",
     title: "다중 업로드 제한",
     content: "1회 신청당 영수증은 최대 3장까지 첨부할 수 있다.",
     classification: "confirmed",
+    sourceType: "company_sheet",
   },
   // suggested (5)
   {
@@ -160,6 +166,7 @@ const mockPolicies: PolicyItem[] = [
     title: "적립 한도",
     content: "1회 신청당 최대 10,000P까지 적립 가능하도록 제안합니다.",
     classification: "suggested",
+    sourceType: "ai_suggested",
     rationale: "과도한 적립 어뷰징 방지를 위해 상한이 필요해 보입니다.",
   },
   {
@@ -167,6 +174,7 @@ const mockPolicies: PolicyItem[] = [
     title: "재신청 제한",
     content: "동일 건이 반려된 후 재신청은 최대 2회까지로 제안합니다.",
     classification: "suggested",
+    sourceType: "ai_suggested",
     rationale: "무한 재신청으로 인한 검토 부담을 줄이기 위함입니다.",
   },
   {
@@ -174,6 +182,7 @@ const mockPolicies: PolicyItem[] = [
     title: "매장 검색 결과 정렬 기준",
     content: "매장 직접 검색 시 결과를 거리순으로 정렬하도록 제안합니다.",
     classification: "suggested",
+    sourceType: "ai_suggested",
     rationale: "화면설계서에 정렬 기준이 명시되어 있지 않아 추론했습니다.",
   },
   {
@@ -181,6 +190,7 @@ const mockPolicies: PolicyItem[] = [
     title: "알림 재발송 주기",
     content: "미확인 알림은 24시간 후 1회 재발송하도록 제안합니다.",
     classification: "suggested",
+    sourceType: "ai_suggested",
     rationale: "처리 결과를 놓치는 사용자를 줄이기 위함입니다.",
   },
   {
@@ -188,6 +198,7 @@ const mockPolicies: PolicyItem[] = [
     title: "약관 재동의 주기",
     content: "약관이 변경된 경우에만 재동의를 요구하도록 제안합니다.",
     classification: "suggested",
+    sourceType: "ai_suggested",
     rationale: "매 신청마다 재동의를 요구하면 이탈이 늘어날 수 있습니다.",
   },
   // need_decision (3)
@@ -197,6 +208,7 @@ const mockPolicies: PolicyItem[] = [
     content:
       "화면설계서엔 \"구매 금액의 1%\"로 표기되어 있으나, 정책 시트엔 계산 기준이 없습니다.",
     classification: "need_decision",
+    sourceType: "ai_suggested",
     rationale: "기준을 정하지 않으면 실제 적립 로직을 구현할 수 없습니다.",
   },
   {
@@ -205,6 +217,7 @@ const mockPolicies: PolicyItem[] = [
     content:
       "화면설계서엔 언급이 없고, 정책 시트엔 \"1년 보관 후 삭제\"로 되어 있습니다.",
     classification: "need_decision",
+    sourceType: "ai_suggested",
     rationale: "개인정보 보관 기간과 직결되어 확정이 필요합니다.",
   },
   {
@@ -213,6 +226,7 @@ const mockPolicies: PolicyItem[] = [
     content:
       "화면설계서엔 \"채팅 상담\"으로, 정책 시트엔 \"전화 상담\"으로 서로 다르게 되어 있습니다.",
     classification: "need_decision",
+    sourceType: "ai_suggested",
     rationale: "연결 방식에 따라 필요한 개발 범위가 달라집니다.",
   },
 ];
