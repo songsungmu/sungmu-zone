@@ -25,6 +25,64 @@ const body = document.body;
 const isTouch = matchMedia("(hover: none), (pointer: coarse)").matches;
 if (isTouch) body.classList.add("is-touch");
 
+/* ---------------- 호기심 유발 게이트 ---------------- */
+document.documentElement.style.overflow = "hidden";
+const gate = document.getElementById("gate");
+
+function openGate() {
+  if (!gate || gate.classList.contains("is-open")) return;
+  gate.classList.add("is-open");
+  document.documentElement.style.overflow = "";
+  setTimeout(() => gate.classList.add("is-hidden"), 1200);
+}
+
+if (gate) {
+  gate.addEventListener("click", openGate);
+  gate.addEventListener(
+    "keydown",
+    (e) => {
+      if (e.key === "Enter" || e.key === " ") openGate();
+    }
+  );
+  window.addEventListener("wheel", openGate, { once: true, passive: true });
+  window.addEventListener("touchmove", openGate, { once: true, passive: true });
+} else {
+  document.documentElement.style.overflow = "";
+}
+
+/* ---------------- 스크램블 텍스트(디코딩되는 느낌의 리빌) ---------------- */
+function scrambleText(el, duration = 900) {
+  if (!el) return;
+  const finalText = el.textContent;
+  const hangulPool = () => String.fromCharCode(0xac00 + Math.floor(Math.random() * 11172));
+  const latinPool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const start = performance.now();
+  function frame(now) {
+    const progress = Math.min(1, (now - start) / duration);
+    const revealCount = Math.floor(progress * finalText.length);
+    let out = "";
+    for (let i = 0; i < finalText.length; i++) {
+      const ch = finalText[i];
+      if (i < revealCount || ch === " " || ch === "\n") {
+        out += ch;
+      } else if (/[a-zA-Z0-9]/.test(ch)) {
+        out += latinPool[Math.floor(Math.random() * latinPool.length)];
+      } else {
+        out += hangulPool();
+      }
+    }
+    el.textContent = out;
+    if (progress < 1) requestAnimationFrame(frame);
+    else el.textContent = finalText;
+  }
+  requestAnimationFrame(frame);
+}
+
+if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  scrambleText(document.getElementById("gate-eyebrow"));
+  scrambleText(document.getElementById("gate-cue"), 700);
+}
+
 /* ---------------- 단계(phase) 결정 ---------------- */
 function resolvePhaseFromDate(now = new Date()) {
   if (now >= SCHEDULE.phase1021) return "phase1021";
@@ -115,16 +173,25 @@ async function loadHeroAsset(phase) {
   }
 }
 
-(async function loadStoryAsset() {
-  const el = document.querySelector(".story-placeholder");
-  if (!el) return;
-  if (await assetExists(STORY_IMAGE)) {
-    el.style.backgroundImage = `url("${STORY_IMAGE}")`;
-    el.style.backgroundSize = "cover";
-    el.style.backgroundPosition = "center";
-    el.querySelector(".placeholder-label").style.display = "none";
-  }
-})();
+function applyBackgroundIfExists(el, path) {
+  if (!el || !path) return Promise.resolve(false);
+  return assetExists(path).then((ok) => {
+    if (ok) {
+      el.style.backgroundImage = `url("${path}")`;
+      el.style.backgroundSize = "cover";
+      el.style.backgroundPosition = "center";
+      const label = el.querySelector(".placeholder-label");
+      if (label) label.style.display = "none";
+    }
+    return ok;
+  });
+}
+
+applyBackgroundIfExists(document.querySelector(".story-placeholder"), STORY_IMAGE);
+
+document.querySelectorAll(".frame-inner[data-asset]").forEach((el) => {
+  applyBackgroundIfExists(el, el.getAttribute("data-asset"));
+});
 
 /* ---------------- 프리로더 ---------------- */
 const preloader = document.getElementById("preloader");
@@ -188,6 +255,29 @@ if (!isTouch) {
   });
   hero.addEventListener("mouseleave", () => {
     heroBg.style.transform = "scale(1.05) translate(0, 0)";
+  });
+
+  hero.addEventListener("mousemove", (e) => {
+    const rect = hero.getBoundingClientRect();
+    hero.style.setProperty("--mx", `${e.clientX - rect.left}px`);
+    hero.style.setProperty("--my", `${e.clientY - rect.top}px`);
+  });
+}
+
+/* ---------------- 갤러리 프레임 마우스 틸트 ---------------- */
+if (!isTouch) {
+  document.querySelectorAll(".gallery-frame").forEach((frame) => {
+    const inner = frame.querySelector(".frame-inner");
+    if (!inner) return;
+    frame.addEventListener("mousemove", (e) => {
+      const rect = frame.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      inner.style.transform = `scale(1.08) rotateX(${y * -6}deg) rotateY(${x * 6}deg)`;
+    });
+    frame.addEventListener("mouseleave", () => {
+      inner.style.transform = "";
+    });
   });
 }
 
