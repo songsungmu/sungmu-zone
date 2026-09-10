@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LOTTE DEPARTMENT STORE — NEW MUSE</title>
+<meta name="description" content="롯데백화점 신규 뮤즈 캠페인">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Noto+Serif+KR:wght@200;300;400;600&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-phase="">
+
+  <!-- 커스텀 커서 (데스크톱 전용, script.js에서 터치 기기 판별 후 비활성화) -->
+  <div class="cursor" aria-hidden="true">
+    <div class="cursor-dot"></div>
+    <div class="cursor-ring"></div>
+  </div>
+
+  <!-- 필름 그레인 오버레이 -->
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- 인트로 프리로더 -->
+  <div class="preloader" id="preloader" aria-hidden="true">
+    <div class="preloader-mark">LOTTE</div>
+    <div class="preloader-line"></div>
+  </div>
+
+  <!-- 상단 고정 헤더 -->
+  <header class="site-header reveal" data-reveal="fade-down">
+    <a href="#top" class="logo" data-cursor="link">LOTTE</a>
+    <span class="header-badge" id="phase-badge"></span>
+  </header>
+
+  <main id="top">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="hero">
+      <div class="hero-bg" id="hero-bg" data-cursor="none">
+        <video id="hero-video" class="hero-media" muted playsinline autoplay loop hidden></video>
+        <div class="hero-media hero-placeholder" id="hero-placeholder">
+          <span class="placeholder-label">IMAGE&nbsp;PLACEHOLDER<br>자산 수급 전 · 자동 교체 예정</span>
+        </div>
+        <div class="hero-overlay"></div>
+      </div>
+
+      <!-- 티저 단계: 심볼만 노출 -->
+      <div class="hero-content phase-only" data-phase-show="teaser">
+        <p class="eyebrow reveal" data-reveal="fade-up">LOTTE DEPARTMENT STORE</p>
+
+        <div class="symbol reveal" data-reveal="fade-up" data-reveal-delay="120">
+          <svg viewBox="0 0 200 200" class="symbol-svg" aria-label="심볼">
+            <g class="daisy">
+              <ellipse class="petal" cx="100" cy="46" rx="14" ry="40"/>
+              <ellipse class="petal" cx="100" cy="46" rx="14" ry="40" transform="rotate(45 100 100)"/>
+              <ellipse class="petal" cx="100" cy="46" rx="14" ry="40" transform="rotate(90 100 100)"/>
+              <ellipse class="petal" cx="100" cy="46" rx="14" ry="40" transform="rotate(135 100 100)"/>
+              <ellipse class="petal" cx="100" cy="46" rx="14" ry="40" transform="rotate(180 100 100)"/>
+              <ellipse class="petal" cx="100" cy="46" rx="14" ry="40" transform="rotate(225 100 100)"/>
+              <ellipse class="petal" cx="100" cy="46" rx="14" ry="40" transform="rotate(270 100 100)"/>
+              <ellipse class="petal" cx="100" cy="46" rx="14" ry="40" transform="rotate(315 100 100)"/>
+              <circle class="core" cx="100" cy="100" r="16"/>
+            </g>
+          </svg>
+        </div>
+
+        <p class="headline headline--sm reveal" data-reveal="fade-up" data-reveal-delay="220">
+          새로운 시대가,<br>곧 피어난다.
+        </p>
+
+        <div class="countdown reveal" data-reveal="fade-up" data-reveal-delay="320" id="countdown-teaser">
+          <div class="countdown-unit"><span class="countdown-num" data-unit="d">00</span><span class="countdown-label">DAYS</span></div>
+          <div class="countdown-unit"><span class="countdown-num" data-unit="h">00</span><span class="countdown-label">HRS</span></div>
+          <div class="countdown-unit"><span class="countdown-num" data-unit="m">00</span><span class="countdown-label">MIN</span></div>
+          <div class="countdown-unit"><span class="countdown-num" data-unit="s">00</span><span class="countdown-label">SEC</span></div>
+        </div>
+      </div>
+
+      <!-- 10.12 버전 -->
+      <div class="hero-content phase-only" data-phase-show="phase1012">
+        <p class="eyebrow reveal" data-reveal="fade-up">LOTTE DEPARTMENT STORE PRESENTS</p>
+        <h1 class="headline reveal" data-reveal="split-up">
+          <span class="line" style="--i:0"><span class="line-inner">클래식은,</span></span>
+          <span class="line" style="--i:1"><span class="line-inner">다시 태어난다.</span></span>
+        </h1>
+        <p class="subcopy reveal" data-reveal="fade-up" data-reveal-delay="260">
+          롯데백화점의 새로운 얼굴을 소개합니다.
+        </p>
+        <div class="coming-soon reveal" data-reveal="fade-up" data-reveal-delay="360">
+          <span class="coming-soon-tag">COMING SOON</span>
+          <span class="coming-soon-date" id="next-date-label"></span>
+        </div>
+      </div>
+
+      <!-- 10.21 버전 -->
+      <div class="hero-content phase-only" data-phase-show="phase1021">
+        <p class="eyebrow reveal" data-reveal="fade-up">LOTTE DEPARTMENT STORE</p>
+        <h1 class="headline reveal" data-reveal="split-up">
+          <span class="line" style="--i:0"><span class="line-inner">오래된 태도,</span></span>
+          <span class="line" style="--i:1"><span class="line-inner">새로운 얼굴.</span></span>
+        </h1>
+        <p class="subcopy reveal" data-reveal="fade-up" data-reveal-delay="260">
+          이야기는, 계속됩니다.
+        </p>
+        <div class="coming-soon reveal" data-reveal="fade-up" data-reveal-delay="360">
+          <span class="coming-soon-tag">COMING SOON</span>
+        </div>
+      </div>
+
+      <div class="scroll-cue reveal" data-reveal="fade-in" data-reveal-delay="800" aria-hidden="true">
+        <span class="scroll-line"></span>
+        <span>SCROLL</span>
+      </div>
+    </section>
+
+    <!-- ============ MARQUEE ============ -->
+    <section class="marquee" aria-hidden="true">
+      <div class="marquee-track" id="marquee-track">
+        <span>LOTTE DEPARTMENT STORE&nbsp;&nbsp;×&nbsp;&nbsp;NEW MUSE&nbsp;&nbsp;—&nbsp;&nbsp;</span>
+        <span>LOTTE DEPARTMENT STORE&nbsp;&nbsp;×&nbsp;&nbsp;NEW MUSE&nbsp;&nbsp;—&nbsp;&nbsp;</span>
+        <span>LOTTE DEPARTMENT STORE&nbsp;&nbsp;×&nbsp;&nbsp;NEW MUSE&nbsp;&nbsp;—&nbsp;&nbsp;</span>
+        <span>LOTTE DEPARTMENT STORE&nbsp;&nbsp;×&nbsp;&nbsp;NEW MUSE&nbsp;&nbsp;—&nbsp;&nbsp;</span>
+      </div>
+    </section>
+
+    <!-- ============ HERITAGE STORY ============ -->
+    <section class="story">
+      <div class="story-media reveal" data-reveal="clip-up">
+        <div class="hero-placeholder story-placeholder">
+          <span class="placeholder-label">IMAGE&nbsp;PLACEHOLDER</span>
+        </div>
+      </div>
+      <div class="story-text">
+        <p class="eyebrow reveal" data-reveal="fade-up">HERITAGE</p>
+        <p class="story-copy reveal" data-reveal="fade-up" data-reveal-delay="120">
+          시간이 지나도 변하지 않는 태도.<br>
+          롯데백화점이 오랫동안 지켜온 것은<br>
+          유행이 아니라 격(格)이었습니다.
+        </p>
+        <p class="story-copy story-copy--muted reveal" data-reveal="fade-up" data-reveal-delay="220">
+          이제, 그 위에 새로운 얼굴을 더합니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ NOTIFY ============ -->
+    <section class="notify">
+      <p class="eyebrow reveal" data-reveal="fade-up">STAY TUNED</p>
+      <h2 class="headline headline--sm reveal" data-reveal="fade-up" data-reveal-delay="100">
+        가장 먼저,<br>이야기를 만나보세요.
+      </h2>
+      <form class="notify-form reveal" data-reveal="fade-up" data-reveal-delay="220" id="notify-form" novalidate>
+        <input type="email" id="notify-email" class="notify-input" placeholder="이메일 주소" autocomplete="email" required data-cursor="link">
+        <button type="submit" class="notify-btn" data-cursor="link">SIGN UP</button>
+      </form>
+      <p class="notify-msg" id="notify-msg" role="status" aria-live="polite"></p>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <span class="logo logo--sm">LOTTE</span>
+    <p class="footer-copy">© 2025 LOTTE DEPARTMENT STORE. ALL RIGHTS RESERVED.</p>
+  </footer>
+
+  <!-- 개발/내부 검수용 단계 전환 패널 (URL에 ?dev=1 추가 시에만 노출) -->
+  <div class="dev-panel" id="dev-panel" hidden>
+    <p>PREVIEW</p>
+    <button type="button" data-set-phase="teaser">Teaser</button>
+    <button type="button" data-set-phase="phase1012">10.12</button>
+    <button type="button" data-set-phase="phase1021">10.21</button>
+    <button type="button" data-set-phase="auto">Auto(날짜)</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
