@@ -8,17 +8,6 @@ const SCHEDULE = {
   phase1021: new Date("2026-10-21T00:00:00+09:00"),
 };
 
-/*
- * 단계별 배경 자산 경로. 아래 파일이 assets/ 폴더에 존재하면 자동으로 플레이스홀더 대신
- * 사용됩니다(영상 우선, 없으면 이미지, 둘 다 없으면 플레이스홀더 유지). 자산이 도착하는 대로
- * 파일만 교체/추가하면 되고 코드 수정은 필요 없습니다.
- */
-const ASSETS = {
-  teaser: { video: "assets/video/teaser.mp4", image: "assets/images/teaser-bg.jpg" },
-  phase1012: { video: "assets/video/phase-1012.mp4", image: "assets/images/phase-1012.jpg" },
-  phase1021: { video: "assets/video/phase-1021.mp4", image: "assets/images/phase-1021.jpg" },
-};
-
 const STORY_IMAGE = "assets/images/story.jpg";
 
 const body = document.body;
@@ -104,7 +93,6 @@ function applyPhase(phase) {
   const badge = document.getElementById("phase-badge");
   const labels = { teaser: "TEASER", phase1012: "10.12", phase1021: "10.21" };
   if (badge) badge.textContent = labels[phase] || "";
-  loadHeroAsset(phase);
 }
 
 applyPhase(getPhase());
@@ -149,30 +137,6 @@ function assetExists(url) {
   return fetch(url, { method: "HEAD" }).then((res) => res.ok).catch(() => false);
 }
 
-async function loadHeroAsset(phase) {
-  const config = ASSETS[phase];
-  const video = document.getElementById("hero-video");
-  const placeholder = document.getElementById("hero-placeholder");
-  if (!config || !video || !placeholder) return;
-
-  video.hidden = true;
-  video.removeAttribute("src");
-  placeholder.style.display = "flex";
-
-  if (config.video && (await assetExists(config.video))) {
-    video.src = config.video;
-    video.hidden = false;
-    placeholder.style.display = "none";
-    return;
-  }
-  if (config.image && (await assetExists(config.image))) {
-    placeholder.style.backgroundImage = `url("${config.image}")`;
-    placeholder.style.backgroundSize = "cover";
-    placeholder.style.backgroundPosition = "center";
-    placeholder.querySelector(".placeholder-label").style.display = "none";
-  }
-}
-
 function applyBackgroundIfExists(el, path) {
   if (!el || !path) return Promise.resolve(false);
   return assetExists(path).then((ok) => {
@@ -193,6 +157,22 @@ applyBackgroundIfExists(document.querySelector(".story-placeholder"), STORY_IMAG
 
 document.querySelectorAll(".frame-inner[data-asset]").forEach((el) => {
   applyBackgroundIfExists(el, el.getAttribute("data-asset"));
+});
+
+document.querySelectorAll(".hero-image").forEach((container) => {
+  const video = container.querySelector("video[data-video]");
+  const placeholder = container.querySelector(".hero-placeholder[data-asset]");
+  const videoPath = video && video.getAttribute("data-video");
+  const imagePath = placeholder && placeholder.getAttribute("data-asset");
+  (async () => {
+    if (videoPath && (await assetExists(videoPath))) {
+      video.src = videoPath;
+      video.hidden = false;
+      if (placeholder) placeholder.style.display = "none";
+      return;
+    }
+    if (imagePath) applyBackgroundIfExists(placeholder, imagePath);
+  })();
 });
 
 /* ---------------- 프리로더 ---------------- */
@@ -245,24 +225,14 @@ const io = new IntersectionObserver(
 );
 revealEls.forEach((el) => io.observe(el));
 
-/* ---------------- 마우스 패럴랙스(히어로) ---------------- */
+/* ---------------- 히어로 이미지 스포트라이트 + 은은한 줌 ---------------- */
 if (!isTouch) {
-  const heroBg = document.getElementById("hero-bg");
-  const hero = document.getElementById("hero");
-  hero.addEventListener("mousemove", (e) => {
-    const rect = hero.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    heroBg.style.transform = `scale(1.08) translate(${x * -14}px, ${y * -14}px)`;
-  });
-  hero.addEventListener("mouseleave", () => {
-    heroBg.style.transform = "scale(1.05) translate(0, 0)";
-  });
-
-  hero.addEventListener("mousemove", (e) => {
-    const rect = hero.getBoundingClientRect();
-    hero.style.setProperty("--mx", `${e.clientX - rect.left}px`);
-    hero.style.setProperty("--my", `${e.clientY - rect.top}px`);
+  document.querySelectorAll(".hero-image").forEach((image) => {
+    image.addEventListener("mousemove", (e) => {
+      const rect = image.getBoundingClientRect();
+      image.style.setProperty("--mx", `${e.clientX - rect.left}px`);
+      image.style.setProperty("--my", `${e.clientY - rect.top}px`);
+    });
   });
 }
 

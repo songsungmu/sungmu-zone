@@ -49,23 +49,16 @@
 
     <!-- ============ HERO ============ -->
     <section class="hero" id="hero">
-      <div class="hero-bg" id="hero-bg" data-cursor="none">
-        <video id="hero-video" class="hero-media" muted playsinline autoplay loop hidden></video>
-        <div class="hero-media hero-placeholder" id="hero-placeholder">
-          <span class="placeholder-label">IMAGE&nbsp;PLACEHOLDER<br>자산 수급 전 · 자동 교체 예정</span>
-        </div>
-        <div class="hero-overlay"></div>
-        <div class="hero-spotlight" aria-hidden="true"></div>
-      </div>
+      <div class="hero-gradient" aria-hidden="true"></div>
 
-      <!-- 티저 단계 -->
+      <!-- 티저 단계: 이미지 없이 큰 카피 + 카운트다운 -->
       <div class="hero-content phase-only" data-phase-show="teaser">
         <p class="eyebrow reveal" data-reveal="fade-up">LOTTE DEPARTMENT STORE</p>
         <p class="campaign-mark reveal" data-reveal="fade-up" data-reveal-delay="60">Me, Myself and I</p>
 
-        <p class="headline headline--sm reveal" data-reveal="fade-up" data-reveal-delay="220">
+        <h1 class="hero-headline reveal" data-reveal="fade-up" data-reveal-delay="160">
           새로운 시대가,<br>곧 피어난다.
-        </p>
+        </h1>
 
         <div class="countdown reveal" data-reveal="fade-up" data-reveal-delay="320" id="countdown-teaser">
           <div class="countdown-unit"><span class="countdown-num" data-unit="d">00</span><span class="countdown-label">DAYS</span></div>
@@ -75,35 +68,45 @@
         </div>
       </div>
 
-      <!-- 10.12 버전 -->
+      <!-- 10.12 버전: 이미지 1컷 + 메인 카피 + 커밍쑨 -->
       <div class="hero-content phase-only" data-phase-show="phase1012">
         <p class="eyebrow reveal" data-reveal="fade-up">LOTTE DEPARTMENT STORE PRESENTS</p>
-        <p class="campaign-mark reveal" data-reveal="fade-up" data-reveal-delay="60">Me, Myself and I</p>
-        <h1 class="headline reveal" data-reveal="split-up">
-          <span class="line" style="--i:0"><span class="line-inner">클래식은,</span></span>
-          <span class="line" style="--i:1"><span class="line-inner">다시 태어난다.</span></span>
+
+        <div class="hero-image reveal" data-reveal="fade-up" data-reveal-delay="100">
+          <video class="hero-image-media" data-video="assets/video/phase-1012.mp4" muted playsinline autoplay loop hidden></video>
+          <div class="hero-image-media hero-placeholder" data-asset="assets/images/phase-1012.jpg">
+            <span class="placeholder-label">IMAGE&nbsp;PLACEHOLDER<br>자산 수급 전 · 자동 교체 예정</span>
+          </div>
+          <div class="hero-image-spotlight" aria-hidden="true"></div>
+        </div>
+
+        <h1 class="hero-headline reveal" data-reveal="fade-up" data-reveal-delay="220">
+          클래식은,<br>다시 태어난다.
         </h1>
-        <p class="subcopy reveal" data-reveal="fade-up" data-reveal-delay="260">
-          롯데백화점의 새로운 얼굴을 소개합니다.
-        </p>
-        <div class="coming-soon reveal" data-reveal="fade-up" data-reveal-delay="360">
+
+        <div class="coming-soon reveal" data-reveal="fade-up" data-reveal-delay="320">
           <span class="coming-soon-tag">COMING SOON</span>
           <span class="coming-soon-date" id="next-date-label"></span>
         </div>
       </div>
 
-      <!-- 10.21 버전 -->
+      <!-- 10.21 버전: 다른 이미지 1컷 + 다른 메인 카피 + 커밍쑨 -->
       <div class="hero-content phase-only" data-phase-show="phase1021">
         <p class="eyebrow reveal" data-reveal="fade-up">LOTTE DEPARTMENT STORE</p>
-        <p class="campaign-mark reveal" data-reveal="fade-up" data-reveal-delay="60">Me, Myself and I</p>
-        <h1 class="headline reveal" data-reveal="split-up">
-          <span class="line" style="--i:0"><span class="line-inner">오래된 태도,</span></span>
-          <span class="line" style="--i:1"><span class="line-inner">새로운 얼굴.</span></span>
+
+        <div class="hero-image reveal" data-reveal="fade-up" data-reveal-delay="100">
+          <video class="hero-image-media" data-video="assets/video/phase-1021.mp4" muted playsinline autoplay loop hidden></video>
+          <div class="hero-image-media hero-placeholder" data-asset="assets/images/phase-1021.jpg">
+            <span class="placeholder-label">IMAGE&nbsp;PLACEHOLDER<br>자산 수급 전 · 자동 교체 예정</span>
+          </div>
+          <div class="hero-image-spotlight" aria-hidden="true"></div>
+        </div>
+
+        <h1 class="hero-headline reveal" data-reveal="fade-up" data-reveal-delay="220">
+          오래된 태도,<br>새로운 얼굴.
         </h1>
-        <p class="subcopy reveal" data-reveal="fade-up" data-reveal-delay="260">
-          이야기는, 계속됩니다.
-        </p>
-        <div class="coming-soon reveal" data-reveal="fade-up" data-reveal-delay="360">
+
+        <div class="coming-soon reveal" data-reveal="fade-up" data-reveal-delay="320">
           <span class="coming-soon-tag">COMING SOON</span>
         </div>
       </div>
@@ -111,16 +114,6 @@
       <div class="scroll-cue reveal" data-reveal="fade-in" data-reveal-delay="800" aria-hidden="true">
         <span class="scroll-line"></span>
         <span>SCROLL</span>
-      </div>
-    </section>
-
-    <!-- ============ MARQUEE ============ -->
-    <section class="marquee" aria-hidden="true">
-      <div class="marquee-track" id="marquee-track">
-        <span>LOTTE DEPARTMENT STORE&nbsp;&nbsp;×&nbsp;&nbsp;NEW MUSE&nbsp;&nbsp;—&nbsp;&nbsp;</span>
-        <span>LOTTE DEPARTMENT STORE&nbsp;&nbsp;×&nbsp;&nbsp;NEW MUSE&nbsp;&nbsp;—&nbsp;&nbsp;</span>
-        <span>LOTTE DEPARTMENT STORE&nbsp;&nbsp;×&nbsp;&nbsp;NEW MUSE&nbsp;&nbsp;—&nbsp;&nbsp;</span>
-        <span>LOTTE DEPARTMENT STORE&nbsp;&nbsp;×&nbsp;&nbsp;NEW MUSE&nbsp;&nbsp;—&nbsp;&nbsp;</span>
       </div>
     </section>
 
