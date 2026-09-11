@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LOTTE DEPARTMENT STORE — NEW MUSE</title>
+<meta name="description" content="롯데백화점 신규 뮤즈 캠페인">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Noto+Serif+KR:wght@200;300;400;600&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-phase="">
+
+  <!-- 호기심 유발 게이트: 스크롤/클릭 전까지 심볼만 노출, 이후 커튼처럼 갈라지며 사라짐 -->
+  <div class="gate" id="gate" role="button" tabindex="0" aria-label="눌러서 입장">
+    <div class="gate-panel gate-panel--left"></div>
+    <div class="gate-panel gate-panel--right"></div>
+    <div class="gate-content">
+      <p class="gate-eyebrow" id="gate-eyebrow">LOTTE DEPARTMENT STORE</p>
+      <p class="campaign-mark">Me, Myself and I</p>
+      <p class="gate-cue" id="gate-cue">CLICK OR SCROLL</p>
+    </div>
+  </div>
+
+  <!-- 커스텀 커서 (데스크톱 전용, script.js에서 터치 기기 판별 후 비활성화) -->
+  <div class="cursor" aria-hidden="true">
+    <div class="cursor-dot"></div>
+    <div class="cursor-ring"></div>
+  </div>
+
+  <!-- 필름 그레인 오버레이 -->
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- 인트로 프리로더 -->
+  <div class="preloader" id="preloader" aria-hidden="true">
+    <div class="preloader-mark">LOTTE</div>
+    <div class="preloader-line"></div>
+  </div>
+
+  <!-- 상단 고정 헤더 -->
+  <header class="site-header reveal" data-reveal="fade-down">
+    <a href="#top" class="logo" data-cursor="link">LOTTE</a>
+    <span class="header-title">Me, Myself and I</span>
+    <span class="header-badge" id="phase-badge"></span>
+  </header>
+
+  <main id="top">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="hero">
+      <div class="hero-gradient" aria-hidden="true"></div>
+
+      <!-- 티저 단계: 이미지 없이 큰 카피 + 카운트다운 -->
+      <div class="hero-content phase-only" data-phase-show="teaser">
+        <p class="eyebrow reveal" data-reveal="fade-up">LOTTE DEPARTMENT STORE</p>
+        <p class="campaign-mark reveal" data-reveal="fade-up" data-reveal-delay="60">Me, Myself and I</p>
+
+        <h1 class="hero-headline reveal" data-reveal="fade-up" data-reveal-delay="160">
+          새로운 시대가,<br>곧 피어난다.
+        </h1>
+
+        <div class="countdown reveal" data-reveal="fade-up" data-reveal-delay="320" id="countdown-teaser">
+          <div class="countdown-unit"><span class="countdown-num" data-unit="d">00</span><span class="countdown-label">DAYS</span></div>
+          <div class="countdown-unit"><span class="countdown-num" data-unit="h">00</span><span class="countdown-label">HRS</span></div>
+          <div class="countdown-unit"><span class="countdown-num" data-unit="m">00</span><span class="countdown-label">MIN</span></div>
+          <div class="countdown-unit"><span class="countdown-num" data-unit="s">00</span><span class="countdown-label">SEC</span></div>
+        </div>
+      </div>
+
+      <!-- 10.12 버전: 이미지 1컷 + 메인 카피 + 커밍쑨 -->
+      <div class="hero-content phase-only" data-phase-show="phase1012">
+        <p class="eyebrow reveal" data-reveal="fade-up">LOTTE DEPARTMENT STORE PRESENTS</p>
+
+        <div class="hero-image reveal" data-reveal="fade-up" data-reveal-delay="100">
+          <video class="hero-image-media" data-video="assets/video/phase-1012.mp4" muted playsinline autoplay loop hidden></video>
+          <div class="hero-image-media hero-placeholder" data-asset="assets/images/phase-1012.jpg">
+            <span class="placeholder-label">IMAGE&nbsp;PLACEHOLDER<br>자산 수급 전 · 자동 교체 예정</span>
+          </div>
+          <div class="hero-image-spotlight" aria-hidden="true"></div>
+        </div>
+
+        <h1 class="hero-headline reveal" data-reveal="fade-up" data-reveal-delay="220">
+          클래식은,<br>다시 태어난다.
+        </h1>
+
+        <div class="coming-soon reveal" data-reveal="fade-up" data-reveal-delay="320">
+          <span class="coming-soon-tag">COMING SOON</span>
+          <span class="coming-soon-date" id="next-date-label"></span>
+        </div>
+      </div>
+
+      <!-- 10.21 버전: 다른 이미지 1컷 + 다른 메인 카피 + 커밍쑨 -->
+      <div class="hero-content phase-only" data-phase-show="phase1021">
+        <p class="eyebrow reveal" data-reveal="fade-up">LOTTE DEPARTMENT STORE</p>
+
+        <div class="hero-image reveal" data-reveal="fade-up" data-reveal-delay="100">
+          <video class="hero-image-media" data-video="assets/video/phase-1021.mp4" muted playsinline autoplay loop hidden></video>
+          <div class="hero-image-media hero-placeholder" data-asset="assets/images/phase-1021.jpg">
+            <span class="placeholder-label">IMAGE&nbsp;PLACEHOLDER<br>자산 수급 전 · 자동 교체 예정</span>
+          </div>
+          <div class="hero-image-spotlight" aria-hidden="true"></div>
+        </div>
+
+        <h1 class="hero-headline reveal" data-reveal="fade-up" data-reveal-delay="220">
+          오래된 태도,<br>새로운 얼굴.
+        </h1>
+
+        <div class="coming-soon reveal" data-reveal="fade-up" data-reveal-delay="320">
+          <span class="coming-soon-tag">COMING SOON</span>
+        </div>
+      </div>
+
+      <div class="scroll-cue reveal" data-reveal="fade-in" data-reveal-delay="800" aria-hidden="true">
+        <span class="scroll-line"></span>
+        <span>SCROLL</span>
+      </div>
+    </section>
+
+    <!-- ============ HERITAGE STORY ============ -->
+    <section class="story">
+      <div class="story-media reveal" data-reveal="clip-up">
+        <div class="hero-placeholder story-placeholder">
+          <span class="placeholder-label">IMAGE&nbsp;PLACEHOLDER</span>
+        </div>
+      </div>
+      <div class="story-text">
+        <p class="eyebrow reveal" data-reveal="fade-up">HERITAGE</p>
+        <p class="story-copy reveal" data-reveal="fade-up" data-reveal-delay="120">
+          시간이 지나도 변하지 않는 태도.<br>
+          롯데백화점이 오랫동안 지켜온 것은<br>
+          유행이 아니라 격(格)이었습니다.
+        </p>
+        <p class="story-copy story-copy--muted reveal" data-reveal="fade-up" data-reveal-delay="220">
+          이제, 그 위에 새로운 얼굴을 더합니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ GALLERY 01: 3단 트립틱(좌 인물 · 중앙 캡션 오버레이 · 우 인물) ============ -->
+    <section class="gallery gallery--triptych">
+      <div class="gallery-heading reveal" data-reveal="fade-up">
+        <p class="eyebrow">MOOD REEL</p>
+        <span class="gallery-count">01 / 03</span>
+      </div>
+      <div class="gallery-grid">
+        <div class="gallery-frame reveal" data-reveal="clip-up">
+          <div class="hero-placeholder frame-inner" data-asset="assets/images/gallery-1-a.jpg">
+            <div class="frame-logo">
+              <span class="frame-logo-word">LOTTE</span>
+              <span class="frame-logo-sub">DEPARTMENT<br>STORE</span>
+            </div>
+          </div>
+        </div>
+        <div class="gallery-frame reveal" data-reveal="clip-up" data-reveal-delay="120">
+          <div class="hero-placeholder frame-inner" data-asset="assets/images/gallery-1-b.jpg">
+            <div class="frame-logo">
+              <span class="frame-logo-word">LOTTE</span>
+              <span class="frame-logo-sub">DEPARTMENT<br>STORE</span>
+            </div>
+          </div>
+          <span class="frame-caption">SELF-PORTRAIT</span>
+        </div>
+        <div class="gallery-frame reveal" data-reveal="clip-up" data-reveal-delay="240">
+          <div class="hero-placeholder frame-inner" data-asset="assets/images/gallery-1-c.jpg">
+            <div class="frame-logo">
+              <span class="frame-logo-word">LOTTE</span>
+              <span class="frame-logo-sub">DEPARTMENT<br>STORE</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ GALLERY 02: 좌 스택(2컷) · 우 콘택트시트 큰 프레임 ============ -->
+    <section class="gallery gallery--diptych">
+      <div class="gallery-heading reveal" data-reveal="fade-up">
+        <p class="eyebrow">MOOD REEL</p>
+        <span class="gallery-count">02 / 03</span>
+      </div>
+      <div class="gallery-grid">
+        <div class="frame-stack">
+          <div class="gallery-frame reveal" data-reveal="clip-up">
+            <div class="hero-placeholder frame-inner" data-asset="assets/images/gallery-2-a.jpg">
+              <div class="frame-logo">
+                <span class="frame-logo-word">LOTTE</span>
+                <span class="frame-logo-sub">DEPARTMENT<br>STORE</span>
+              </div>
+            </div>
+          </div>
+          <div class="gallery-frame reveal" data-reveal="clip-up" data-reveal-delay="120">
+            <div class="hero-placeholder frame-inner" data-asset="assets/images/gallery-2-b.jpg">
+              <div class="frame-logo">
+                <span class="frame-logo-word">LOTTE</span>
+                <span class="frame-logo-sub">DEPARTMENT<br>STORE</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="gallery-frame gallery-frame--wide frame--contact reveal" data-reveal="clip-up" data-reveal-delay="200">
+          <span class="frame-reel-label">UNFOLD 21</span>
+          <div class="hero-placeholder frame-inner" data-asset="assets/images/gallery-2-c.jpg">
+            <div class="frame-logo">
+              <span class="frame-logo-word">LOTTE</span>
+              <span class="frame-logo-sub">DEPARTMENT<br>STORE</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ GALLERY 03: 좌 스택(2컷) · 우 큰 프레임, 역순 배치 ============ -->
+    <section class="gallery gallery--diptych gallery--reverse">
+      <div class="gallery-heading reveal" data-reveal="fade-up">
+        <p class="eyebrow">MOOD REEL</p>
+        <span class="gallery-count">03 / 03</span>
+      </div>
+      <div class="gallery-grid">
+        <div class="frame-stack">
+          <div class="gallery-frame reveal" data-reveal="clip-up">
+            <div class="hero-placeholder frame-inner" data-asset="assets/images/gallery-3-a.jpg">
+              <div class="frame-logo">
+                <span class="frame-logo-word">LOTTE</span>
+                <span class="frame-logo-sub">DEPARTMENT<br>STORE</span>
+              </div>
+            </div>
+          </div>
+          <div class="gallery-frame reveal" data-reveal="clip-up" data-reveal-delay="120">
+            <div class="hero-placeholder frame-inner" data-asset="assets/images/gallery-3-b.jpg">
+              <div class="frame-logo">
+                <span class="frame-logo-word">LOTTE</span>
+                <span class="frame-logo-sub">DEPARTMENT<br>STORE</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="gallery-frame gallery-frame--wide reveal" data-reveal="clip-up" data-reveal-delay="200">
+          <div class="hero-placeholder frame-inner" data-asset="assets/images/gallery-3-c.jpg">
+            <div class="frame-logo">
+              <span class="frame-logo-word">LOTTE</span>
+              <span class="frame-logo-sub">DEPARTMENT<br>STORE</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ NOTIFY ============ -->
+    <section class="notify">
+      <p class="eyebrow reveal" data-reveal="fade-up">STAY TUNED</p>
+      <h2 class="headline headline--sm reveal" data-reveal="fade-up" data-reveal-delay="100">
+        가장 먼저,<br>이야기를 만나보세요.
+      </h2>
+      <form class="notify-form reveal" data-reveal="fade-up" data-reveal-delay="220" id="notify-form" novalidate>
+        <input type="email" id="notify-email" class="notify-input" placeholder="이메일 주소" autocomplete="email" required data-cursor="link">
+        <button type="submit" class="notify-btn" data-cursor="link">SIGN UP</button>
+      </form>
+      <p class="notify-msg" id="notify-msg" role="status" aria-live="polite"></p>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <span class="logo logo--sm">LOTTE</span>
+    <p class="footer-copy">© 2025 LOTTE DEPARTMENT STORE. ALL RIGHTS RESERVED.</p>
+  </footer>
+
+  <!-- 개발/내부 검수용 단계 전환 패널 (URL에 ?dev=1 추가 시에만 노출) -->
+  <div class="dev-panel" id="dev-panel" hidden>
+    <p>PREVIEW</p>
+    <button type="button" data-set-phase="teaser">Teaser</button>
+    <button type="button" data-set-phase="phase1012">10.12</button>
+    <button type="button" data-set-phase="phase1021">10.21</button>
+    <button type="button" data-set-phase="auto">Auto(날짜)</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
