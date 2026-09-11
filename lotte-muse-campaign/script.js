@@ -182,8 +182,8 @@ function applyBackgroundIfExists(el, path) {
       el.style.backgroundPosition = "center";
       const label = el.querySelector(".placeholder-label");
       if (label) label.style.display = "none";
-      const illustration = el.querySelector(".frame-illustration");
-      if (illustration) illustration.style.display = "none";
+      const logo = el.querySelector(".frame-logo");
+      if (logo) logo.style.display = "none";
     }
     return ok;
   });

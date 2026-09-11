@@ -394,13 +394,38 @@ body.is-touch .cursor {
   margin: 0 0 20px 24px;
 }
 
-/* 스케치 일러스트(실사진 도착 전 자리표시) — frame-inner를 꽉 채우고 라벨 아래에 깔린다 */
-.frame-illustration {
+/* 롯데 워드마크 자리표시(실사진 도착 전) — frame-inner 중앙에 로고+글자를 배치 */
+.frame-logo {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
   z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1.6vw, 14px);
+}
+
+.frame-logo-icon {
+  width: clamp(16px, 2.6vw, 24px);
+  height: auto;
+  flex-shrink: 0;
+}
+
+.frame-logo-word {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: clamp(0.95rem, 2.4vw, 1.5rem);
+  letter-spacing: 0.01em;
+  color: var(--white);
+}
+
+.frame-logo-sub {
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: clamp(0.4rem, 0.85vw, 0.52rem);
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  color: var(--grey-1);
 }
 
 .hero-overlay {
