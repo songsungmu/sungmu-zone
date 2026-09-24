@@ -8,11 +8,6 @@ import { GoogleSheetPanel } from "@/components/workspace/GoogleSheetPanel";
 import { Header } from "@/components/workspace/Header";
 import { DuplicateConfirmDialog } from "@/components/workspace/review/DuplicateConfirmDialog";
 import { ReviewListPanel } from "@/components/workspace/review/ReviewListPanel";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
 import { createMockAnalysisResult } from "@/lib/mock-review-data";
 import { initialFigmaConnectionState } from "@/types/figma";
 import type {
@@ -218,62 +213,44 @@ export default function WorkspacePage() {
       <Header />
 
       {/*
-        각 영역 경계를 드래그해서 크기를 조절할 수 있다 (react-resizable-panels).
-        초기 비율은 기존 레이아웃과 동일하게 28:52:20으로 맞춰둔다. 패널 크기는
-        컨테이너 대비 %라서 뷰포트가 아무리 작아져도 자기들끼리 줄어들 뿐
-        넘치지 않는다 — 그래서 전체 영역에 min-h를 직접 줘서, 화면이 이보다
-        작을 땐 페이지 자체가 스크롤되게 한다(h-screen 대신 min-h-screen).
+        각 카드 오른쪽 아래 모서리를 드래그하면 그 카드만 커지거나 작아진다
+        (CSS resize). 다른 영역을 줄이는 대신, 카드가 커진 만큼 페이지 전체
+        길이가 늘어나서 아래로 스크롤해 볼 수 있다 — 그래서 바깥 컨테이너에
+        높이를 고정하지 않고 자연스러운 문서 흐름(block)으로 둔다.
       */}
-      <div className="flex-1 p-4">
-        <ResizablePanelGroup direction="vertical" className="min-h-[700px]">
-          <ResizablePanel defaultSize={28} minSize={15}>
-            <ResizablePanelGroup direction="horizontal">
-              <ResizablePanel defaultSize={50} minSize={20}>
-                <div className="h-full min-h-0 pr-2">
-                  <FigmaPanel value={figma} onChange={setFigma} />
-                </div>
-              </ResizablePanel>
-              <ResizableHandle withHandle />
-              <ResizablePanel defaultSize={50} minSize={20}>
-                <div className="h-full min-h-0 pl-2">
-                  <ClaudePanel
-                    figmaFileUrl={figma.url}
-                    onAnalysisComplete={setAnalysisResult}
-                  />
-                </div>
-              </ResizablePanel>
-            </ResizablePanelGroup>
-          </ResizablePanel>
+      <div className="flex-1 space-y-4 p-4">
+        <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
+          <div className="h-64 min-h-40 resize-y overflow-auto rounded-xl">
+            <FigmaPanel value={figma} onChange={setFigma} />
+          </div>
+          <div className="h-64 min-h-40 resize-y overflow-auto rounded-xl">
+            <ClaudePanel
+              figmaFileUrl={figma.url}
+              onAnalysisComplete={setAnalysisResult}
+            />
+          </div>
+        </div>
 
-          <ResizableHandle withHandle />
+        {/* 중단 리뷰 리스트 — 화면에서 가장 큰 비중을 차지하도록 기본 높이를 크게 잡는다 */}
+        <div className="h-[28rem] min-h-64 resize-y overflow-auto rounded-xl">
+          <ReviewListPanel
+            requirements={analysisResult.requirements}
+            policies={analysisResult.policies}
+            exceptions={analysisResult.exceptions}
+            conflicts={analysisResult.conflicts}
+            pendingPolicyIds={pendingPolicyIds}
+            onApprove={handleApprove}
+            onReject={handleReject}
+            onEdit={handleEdit}
+            onDecide={handleDecide}
+            onResolveConflict={handleResolveConflict}
+          />
+        </div>
 
-          {/* 중단 리뷰 리스트 — 화면에서 가장 큰 비중, 기본 52% */}
-          <ResizablePanel defaultSize={52} minSize={20}>
-            <div className="h-full min-h-0 py-2">
-              <ReviewListPanel
-                requirements={analysisResult.requirements}
-                policies={analysisResult.policies}
-                exceptions={analysisResult.exceptions}
-                conflicts={analysisResult.conflicts}
-                pendingPolicyIds={pendingPolicyIds}
-                onApprove={handleApprove}
-                onReject={handleReject}
-                onEdit={handleEdit}
-                onDecide={handleDecide}
-                onResolveConflict={handleResolveConflict}
-              />
-            </div>
-          </ResizablePanel>
-
-          <ResizableHandle withHandle />
-
-          {/* 하단 시트 연결 — 기본 20% */}
-          <ResizablePanel defaultSize={20} minSize={10}>
-            <div className="h-full min-h-0 pt-2">
-              <GoogleSheetPanel value={sheet} onChange={setSheet} />
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+        {/* 하단 시트 연결 */}
+        <div className="h-40 min-h-32 resize-y overflow-auto rounded-xl">
+          <GoogleSheetPanel value={sheet} onChange={setSheet} />
+        </div>
       </div>
 
       {duplicateConfirm && (
