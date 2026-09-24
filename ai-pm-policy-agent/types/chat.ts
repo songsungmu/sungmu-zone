@@ -33,6 +33,8 @@ export interface ChatAnalyzeResponse {
  * 보내고, 마지막에 결과를 담은 한 줄을 보낸다.
  */
 export type ChatStreamEvent =
+  | { type: "start" }
+  | { type: "heartbeat" }
   | { type: "tool_call"; id: string; name: string }
   | { type: "tool_done"; id: string }
   | ({ type: "result" } & ChatAnalyzeResponse)

@@ -53,10 +53,14 @@ export async function POST(request: Request) {
   // 5개의 MCP 도구를 순차 호출하는 분석 한 번에 수십 초가 걸릴 수 있어,
   // 응답을 다 모아서 한 번에 반환(client.beta.messages.create)하면 Netlify의
   // 일반 서버리스 함수 타임아웃(기본 10초, Pro 플랜도 최대 26초)에 걸려
-  // 504가 난다. 대신 client.beta.messages.stream으로 받아 도구 호출/완료
-  // 이벤트를 즉시 NDJSON으로 흘려보낸다 — Netlify는 응답 바이트가 계속
-  // 흐르는 스트리밍 함수는 훨씬 긴 실행 시간(최대 60초)을 허용한다.
+  // 504가 난다. client.beta.messages.stream()으로 실시간 이벤트를 직접
+  // 흘려보내는 방식은 Netlify 환경에서 Anthropic SDK의 SSE 파서가 응답을
+  // 깨뜨리는 문제가 있어(JSON.parse 에러) 포기했다 — 대신 검증된
+  // messages.create() 논스트리밍 호출은 그대로 쓰고, 그 응답을 기다리는
+  // 동안 하트비트만 주기적으로 흘려보내 Netlify가 "스트리밍 함수"로
+  // 인식하게 한다. 응답이 오면 도구 호출 이벤트를 순서대로 재생한다.
   const encoder = new TextEncoder();
+  const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -64,10 +68,13 @@ export async function POST(request: Request) {
         controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
       }
 
+      send({ type: "start" });
+      const heartbeat = setInterval(() => send({ type: "heartbeat" }), 5000);
+
       try {
         const client = new Anthropic();
 
-        const mcpStream = client.beta.messages.stream({
+        const response = await client.beta.messages.create({
           model: "claude-opus-5",
           max_tokens: 16000,
           betas: ["mcp-client-2025-11-20"],
@@ -84,18 +91,15 @@ export async function POST(request: Request) {
           messages: body!.messages.map((m) => ({ role: m.role, content: m.content })),
         });
 
-        for await (const event of mcpStream) {
-          if (event.type !== "content_block_start") continue;
-          const block = event.content_block;
-          if (block.type === "mcp_tool_use") {
-            send({ type: "tool_call", id: block.id, name: block.name });
-          } else if (block.type === "mcp_tool_result") {
-            send({ type: "tool_done", id: block.tool_use_id });
-          }
-        }
+        clearInterval(heartbeat);
 
-        const finalMessage = await mcpStream.finalMessage();
-        const result = parseMcpAnalysisResponse(finalMessage.content);
+        const result = parseMcpAnalysisResponse(response.content);
+
+        for (const call of result.toolCalls) {
+          send({ type: "tool_call", id: call.id, name: call.name });
+          await wait(200);
+          send({ type: "tool_done", id: call.id });
+        }
 
         // Phase 10: 새로고침해도 유지되도록 분석 결과를 저장한다. 실제로 뭔가
         // 분석됐을 때만 project 행을 만든다 — 도구 호출 없이 끝난 잡담 턴까지
@@ -120,6 +124,7 @@ export async function POST(request: Request) {
           error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
         send({ type: "error", message });
       } finally {
+        clearInterval(heartbeat);
         controller.close();
       }
     },
