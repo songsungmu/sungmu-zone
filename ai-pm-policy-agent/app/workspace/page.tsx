@@ -214,15 +214,18 @@ export default function WorkspacePage() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-secondary/40">
+    <div className="flex min-h-screen flex-col bg-secondary/40">
       <Header />
 
       {/*
         각 영역 경계를 드래그해서 크기를 조절할 수 있다 (react-resizable-panels).
-        초기 비율은 기존 레이아웃과 동일하게 28:52:20으로 맞춰둔다.
+        초기 비율은 기존 레이아웃과 동일하게 28:52:20으로 맞춰둔다. 패널 크기는
+        컨테이너 대비 %라서 뷰포트가 아무리 작아져도 자기들끼리 줄어들 뿐
+        넘치지 않는다 — 그래서 전체 영역에 min-h를 직접 줘서, 화면이 이보다
+        작을 땐 페이지 자체가 스크롤되게 한다(h-screen 대신 min-h-screen).
       */}
-      <div className="min-h-0 flex-1 p-4">
-        <ResizablePanelGroup direction="vertical">
+      <div className="flex-1 p-4">
+        <ResizablePanelGroup direction="vertical" className="min-h-[700px]">
           <ResizablePanel defaultSize={28} minSize={15}>
             <ResizablePanelGroup direction="horizontal">
               <ResizablePanel defaultSize={50} minSize={20}>
