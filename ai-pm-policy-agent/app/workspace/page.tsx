@@ -8,6 +8,11 @@ import { GoogleSheetPanel } from "@/components/workspace/GoogleSheetPanel";
 import { Header } from "@/components/workspace/Header";
 import { DuplicateConfirmDialog } from "@/components/workspace/review/DuplicateConfirmDialog";
 import { ReviewListPanel } from "@/components/workspace/review/ReviewListPanel";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 import { createMockAnalysisResult } from "@/lib/mock-review-data";
 import { initialFigmaConnectionState } from "@/types/figma";
 import type {
@@ -213,37 +218,59 @@ export default function WorkspacePage() {
       <Header />
 
       {/*
-        grid-rows에 fr 단위를 쓰면 gap/padding을 제외한 나머지 공간을
-        정확히 28:52:20 비율로 나눠준다 (flex-basis 퍼센트는 gap만큼
-        컨테이너 밖으로 넘쳐서 페이지 스크롤이 생기는 문제가 있었음).
+        각 영역 경계를 드래그해서 크기를 조절할 수 있다 (react-resizable-panels).
+        초기 비율은 기존 레이아웃과 동일하게 28:52:20으로 맞춰둔다.
       */}
-      <div className="grid min-h-0 flex-1 grid-rows-[28fr_52fr_20fr] gap-4 p-4">
-        {/* 상단 2단 그리드 — 컴팩트하게, 전체 콘텐츠 영역의 28% */}
-        <div className="grid min-h-0 grid-cols-1 gap-4 md:grid-cols-2">
-          <FigmaPanel value={figma} onChange={setFigma} />
-          <ClaudePanel figmaFileUrl={figma.url} onAnalysisComplete={setAnalysisResult} />
-        </div>
+      <div className="min-h-0 flex-1 p-4">
+        <ResizablePanelGroup direction="vertical">
+          <ResizablePanel defaultSize={28} minSize={15}>
+            <ResizablePanelGroup direction="horizontal">
+              <ResizablePanel defaultSize={50} minSize={20}>
+                <div className="h-full min-h-0 pr-2">
+                  <FigmaPanel value={figma} onChange={setFigma} />
+                </div>
+              </ResizablePanel>
+              <ResizableHandle withHandle />
+              <ResizablePanel defaultSize={50} minSize={20}>
+                <div className="h-full min-h-0 pl-2">
+                  <ClaudePanel
+                    figmaFileUrl={figma.url}
+                    onAnalysisComplete={setAnalysisResult}
+                  />
+                </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          </ResizablePanel>
 
-        {/* 중단 리뷰 리스트 — 화면에서 가장 큰 비중, 52% */}
-        <div className="min-h-0">
-          <ReviewListPanel
-            requirements={analysisResult.requirements}
-            policies={analysisResult.policies}
-            exceptions={analysisResult.exceptions}
-            conflicts={analysisResult.conflicts}
-            pendingPolicyIds={pendingPolicyIds}
-            onApprove={handleApprove}
-            onReject={handleReject}
-            onEdit={handleEdit}
-            onDecide={handleDecide}
-            onResolveConflict={handleResolveConflict}
-          />
-        </div>
+          <ResizableHandle withHandle />
 
-        {/* 하단 시트 연결 — 20% */}
-        <div className="min-h-0">
-          <GoogleSheetPanel value={sheet} onChange={setSheet} />
-        </div>
+          {/* 중단 리뷰 리스트 — 화면에서 가장 큰 비중, 기본 52% */}
+          <ResizablePanel defaultSize={52} minSize={20}>
+            <div className="h-full min-h-0 py-2">
+              <ReviewListPanel
+                requirements={analysisResult.requirements}
+                policies={analysisResult.policies}
+                exceptions={analysisResult.exceptions}
+                conflicts={analysisResult.conflicts}
+                pendingPolicyIds={pendingPolicyIds}
+                onApprove={handleApprove}
+                onReject={handleReject}
+                onEdit={handleEdit}
+                onDecide={handleDecide}
+                onResolveConflict={handleResolveConflict}
+              />
+            </div>
+          </ResizablePanel>
+
+          <ResizableHandle withHandle />
+
+          {/* 하단 시트 연결 — 기본 20% */}
+          <ResizablePanel defaultSize={20} minSize={10}>
+            <div className="h-full min-h-0 pt-2">
+              <GoogleSheetPanel value={sheet} onChange={setSheet} />
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
 
       {duplicateConfirm && (
