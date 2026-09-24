@@ -3,7 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 
 import { saveAnalysisResult } from "@/lib/core/supabase";
 import { parseMcpAnalysisResponse } from "@/lib/mcp-response-mapping";
-import type { ChatAnalyzeResponse, ChatMessage } from "@/types/chat";
+import type { ChatMessage } from "@/types/chat";
 
 const MCP_SERVER_NAME = "ai-pm-policy-agent";
 
@@ -50,49 +50,86 @@ export async function POST(request: Request) {
     body.figmaFileUrl?.trim() || "(연결되지 않음)"
   }`;
 
-  try {
-    const client = new Anthropic();
+  // 5개의 MCP 도구를 순차 호출하는 분석 한 번에 수십 초가 걸릴 수 있어,
+  // 응답을 다 모아서 한 번에 반환(client.beta.messages.create)하면 Netlify의
+  // 일반 서버리스 함수 타임아웃(기본 10초, Pro 플랜도 최대 26초)에 걸려
+  // 504가 난다. 대신 client.beta.messages.stream으로 받아 도구 호출/완료
+  // 이벤트를 즉시 NDJSON으로 흘려보낸다 — Netlify는 응답 바이트가 계속
+  // 흐르는 스트리밍 함수는 훨씬 긴 실행 시간(최대 60초)을 허용한다.
+  const encoder = new TextEncoder();
 
-    const response = await client.beta.messages.create({
-      model: "claude-opus-5",
-      max_tokens: 16000,
-      betas: ["mcp-client-2025-11-20"],
-      system,
-      mcp_servers: [
-        {
-          type: "url",
-          url: mcpServerUrl,
-          name: MCP_SERVER_NAME,
-          authorization_token: mcpServerToken,
-        },
-      ],
-      tools: [{ type: "mcp_toolset", mcp_server_name: MCP_SERVER_NAME }],
-      messages: body.messages.map((m) => ({ role: m.role, content: m.content })),
-    });
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      function send(event: Record<string, unknown>) {
+        controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
+      }
 
-    const result: ChatAnalyzeResponse = parseMcpAnalysisResponse(response.content);
+      try {
+        const client = new Anthropic();
 
-    // Phase 10: 새로고침해도 유지되도록 분석 결과를 저장한다. 실제로 뭔가
-    // 분석됐을 때만 project 행을 만든다 — 도구 호출 없이 끝난 잡담 턴까지
-    // 빈 프로젝트로 남기지 않기 위함이다. 베스트에포트라 실패해도 이
-    // 응답 자체는 그대로 반환한다.
-    if (result.requirements.length > 0 || result.policies.length > 0) {
-      await saveAnalysisResult({
-        figmaFileUrl: body.figmaFileUrl?.trim() || null,
-        requirements: result.requirements,
-        policies: result.policies,
-        exceptions: result.exceptions,
-        conflicts: result.conflicts,
-      }).catch((error) => {
-        console.warn("분석 결과 저장 중 오류(무시하고 계속):", error);
-      });
-    }
+        const mcpStream = client.beta.messages.stream({
+          model: "claude-opus-5",
+          max_tokens: 16000,
+          betas: ["mcp-client-2025-11-20"],
+          system,
+          mcp_servers: [
+            {
+              type: "url",
+              url: mcpServerUrl,
+              name: MCP_SERVER_NAME,
+              authorization_token: mcpServerToken,
+            },
+          ],
+          tools: [{ type: "mcp_toolset", mcp_server_name: MCP_SERVER_NAME }],
+          messages: body!.messages.map((m) => ({ role: m.role, content: m.content })),
+        });
 
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error("분석 요청 처리 중 오류:", error);
-    const message =
-      error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+        for await (const event of mcpStream) {
+          if (event.type !== "content_block_start") continue;
+          const block = event.content_block;
+          if (block.type === "mcp_tool_use") {
+            send({ type: "tool_call", id: block.id, name: block.name });
+          } else if (block.type === "mcp_tool_result") {
+            send({ type: "tool_done", id: block.tool_use_id });
+          }
+        }
+
+        const finalMessage = await mcpStream.finalMessage();
+        const result = parseMcpAnalysisResponse(finalMessage.content);
+
+        // Phase 10: 새로고침해도 유지되도록 분석 결과를 저장한다. 실제로 뭔가
+        // 분석됐을 때만 project 행을 만든다 — 도구 호출 없이 끝난 잡담 턴까지
+        // 빈 프로젝트로 남기지 않기 위함이다. 베스트에포트라 실패해도 이
+        // 응답 자체는 그대로 반환한다.
+        if (result.requirements.length > 0 || result.policies.length > 0) {
+          await saveAnalysisResult({
+            figmaFileUrl: body!.figmaFileUrl?.trim() || null,
+            requirements: result.requirements,
+            policies: result.policies,
+            exceptions: result.exceptions,
+            conflicts: result.conflicts,
+          }).catch((error) => {
+            console.warn("분석 결과 저장 중 오류(무시하고 계속):", error);
+          });
+        }
+
+        send({ type: "result", ...result });
+      } catch (error) {
+        console.error("분석 요청 처리 중 오류:", error);
+        const message =
+          error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
+        send({ type: "error", message });
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "application/x-ndjson; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
 }

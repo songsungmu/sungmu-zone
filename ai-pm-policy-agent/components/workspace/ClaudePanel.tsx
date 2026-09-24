@@ -11,14 +11,10 @@ import {
   ToolCallLog,
   type ToolCallLogEntry,
 } from "@/components/workspace/ToolCallLog";
-import type { ChatAnalyzeResponse, ChatMessage } from "@/types/chat";
+import type { ChatMessage, ChatStreamEvent } from "@/types/chat";
 import type { AnalysisResult } from "@/types/review";
 
 const QUICK_ACTION_MESSAGE = "이 화면 정책 검토해줘";
-
-function wait(ms: number) {
-  return new Promise<void>((resolve) => setTimeout(resolve, ms));
-}
 
 /**
  * 이 패널의 역할은 "실행 과정을 투명하게 보여주기"로 한정한다.
@@ -70,44 +66,68 @@ export function ClaudePanel({ figmaFileUrl, onAnalysisComplete }: ClaudePanelPro
         body: JSON.stringify({ messages: nextMessages, figmaFileUrl }),
       });
 
-      if (!res.ok) {
+      if (!res.ok || !res.body) {
         const body = (await res.json().catch(() => null)) as { error?: string } | null;
         throw new Error(body?.error ?? `요청이 실패했습니다 (${res.status}).`);
       }
 
-      const data = (await res.json()) as ChatAnalyzeResponse;
+      // /api/chat은 NDJSON(한 줄에 이벤트 하나)을 스트리밍한다 — 도구가
+      // 실제로 호출/완료되는 시점에 맞춰 한 줄씩 도착하므로, 그대로 읽어서
+      // toolCalls를 갱신한다(가짜 지연으로 재생하지 않는다).
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let settled = false;
 
-      // ToolCallLog는 Phase 3와 동일하게 순서대로 하나씩 채워서 진행 과정을
-      // 보여준다 — 실제 API는 스트리밍이 아니라 완료된 결과를 한 번에
-      // 반환하므로, 이미 끝난 toolCalls를 순서대로 재생하는 방식이다.
-      for (const call of data.toolCalls) {
+      function handleEvent(event: ChatStreamEvent) {
         if (!isMountedRef.current) return;
-        setToolCalls((prev) => [
-          ...prev,
-          { id: call.id, label: `${call.name}()`, status: "running" },
-        ]);
-        await wait(300);
-        if (!isMountedRef.current) return;
-        setToolCalls((prev) =>
-          prev.map((c) => (c.id === call.id ? { ...c, status: "done" } : c))
-        );
+
+        if (event.type === "tool_call") {
+          setToolCalls((prev) => [
+            ...prev,
+            { id: event.id, label: `${event.name}()`, status: "running" },
+          ]);
+        } else if (event.type === "tool_done") {
+          setToolCalls((prev) =>
+            prev.map((c) => (c.id === event.id ? { ...c, status: "done" } : c))
+          );
+        } else if (event.type === "error") {
+          throw new Error(event.message);
+        } else if (event.type === "result") {
+          settled = true;
+          const finalText = event.finalText || "분석이 완료됐습니다.";
+          setSummaryText(finalText);
+          setMessages((prev) => [...prev, { role: "assistant", content: finalText }]);
+          setIsAnalyzing(false);
+
+          onAnalysisComplete({
+            requirements: event.requirements,
+            policies: event.policies,
+            conflicts: event.conflicts,
+            exceptions: event.exceptions,
+            summary: finalText,
+            generatedAt: new Date().toISOString(),
+          });
+        }
       }
 
-      if (!isMountedRef.current) return;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
 
-      const finalText = data.finalText || "분석이 완료됐습니다.";
-      setSummaryText(finalText);
-      setMessages((prev) => [...prev, { role: "assistant", content: finalText }]);
-      setIsAnalyzing(false);
+        let newlineIndex: number;
+        while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+          const line = buffer.slice(0, newlineIndex).trim();
+          buffer = buffer.slice(newlineIndex + 1);
+          if (!line) continue;
+          handleEvent(JSON.parse(line) as ChatStreamEvent);
+        }
+      }
 
-      onAnalysisComplete({
-        requirements: data.requirements,
-        policies: data.policies,
-        conflicts: data.conflicts,
-        exceptions: data.exceptions,
-        summary: finalText,
-        generatedAt: new Date().toISOString(),
-      });
+      if (!settled) {
+        throw new Error("분석 응답이 완료되지 않았습니다.");
+      }
     } catch (error) {
       if (!isMountedRef.current) return;
       setErrorText(
