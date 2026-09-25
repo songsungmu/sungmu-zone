@@ -238,8 +238,12 @@ async function extractRequirementsFromDocument(
 
   const response = await client.messages.parse({
     model: "claude-opus-5",
-    max_tokens: 16000,
-    output_config: { effort: "medium", format: zodOutputFormat(DocumentAnalysisSchema) },
+    max_tokens: 4096,
+    // 이 호출은 Netlify 서버리스 함수의 30초 실행 제한 안에 끝나야 한다.
+    // 화면 여러 개가 함께 담긴 복잡한 이미지에서는 medium/high effort가
+    // 그 시간을 넘기는 걸 확인해서, 속도를 위해 low로 낮춘다 — 이미지를
+    // 읽고 구조화하는 작업이라 low effort로도 내용을 놓치지는 않는다.
+    output_config: { effort: "low", format: zodOutputFormat(DocumentAnalysisSchema) },
     system:
       "당신은 PM을 돕는 분석 에이전트입니다. 업로드된 화면설계서를 읽고 요구사항 후보를 구조화해서 반환하세요. requirements[].id는 FR-01, FR-02... 형식으로 순서대로 부여하고, sourceFrame에는 그 요구사항이 나온 화면 이름이나 페이지 번호(예: '1페이지', '로그인 화면')를 적으세요.",
     messages: [
