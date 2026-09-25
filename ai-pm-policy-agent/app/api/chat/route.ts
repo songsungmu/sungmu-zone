@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+import { z } from "zod";
 
 import { callMcpTool } from "@/lib/core/mcpClient";
 import { saveAnalysisResult } from "@/lib/core/supabase";
@@ -11,33 +13,23 @@ import type {
   RequirementItem,
 } from "@/types/review";
 
+interface UploadedDocument {
+  fileName: string;
+  mediaType: "image/png" | "application/pdf";
+  base64: string;
+}
+
 interface ChatRequestBody {
   messages: ChatMessage[];
-  figmaFileUrl?: string;
+  document?: UploadedDocument;
 }
 
 // mcp-server가 반환하는 원시 shape (mcp-server/src/lib/schemas.ts와 대응).
-interface FigmaFrame {
-  id: string;
-  name: string;
-  type: string;
-}
-interface FigmaContext {
-  fileName: string;
-  frames: FigmaFrame[];
-  summary: string;
-}
 interface RawPolicyRecord {
   id: string;
   policyName: string;
   content: string;
   category: string;
-}
-interface RawRequirement {
-  id: string;
-  title: string;
-  description: string;
-  sourceFrame: string | null;
 }
 interface RawPolicyAnalysisItem {
   id: string;
@@ -54,6 +46,18 @@ interface RawPolicyConflict {
   description: string;
 }
 
+const DocumentAnalysisSchema = z.object({
+  requirements: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      description: z.string(),
+      /** 이 요구사항이 어느 화면(PNG는 파일 자체, PDF는 페이지)에서 나왔는지. */
+      sourceFrame: z.string(),
+    })
+  ),
+});
+
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as ChatRequestBody | null;
 
@@ -61,10 +65,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "messages가 필요합니다." }, { status: 400 });
   }
 
-  const figmaFileUrl = body.figmaFileUrl?.trim();
-  if (!figmaFileUrl) {
+  const doc = body.document;
+  if (!doc || !doc.base64 || !doc.mediaType) {
     return NextResponse.json(
-      { error: "Figma 파일 URL이 연결되어 있지 않습니다." },
+      { error: "화면설계서(PNG/PDF)가 업로드되어 있지 않습니다." },
       { status: 400 }
     );
   }
@@ -85,13 +89,11 @@ export async function POST(request: Request) {
       }
 
       let callCounter = 0;
-      // 도구를 순서대로, 짧게 직접 호출한다 — 결과를 기다리는 동안 진행
-      // 상황을 실시간 NDJSON 이벤트로 흘려보낸다(가짜 재생이 아니다).
-      async function runTool<T>(name: string, args: Record<string, unknown>): Promise<T> {
+      async function runStep<T>(name: string, fn: () => Promise<T>): Promise<T> {
         const id = `tool-${++callCounter}`;
         send({ type: "tool_call", id, name });
         try {
-          const result = await callMcpTool<T>(name, args);
+          const result = await fn();
           send({ type: "tool_done", id });
           return result;
         } catch (error) {
@@ -101,27 +103,29 @@ export async function POST(request: Request) {
       }
 
       try {
-        const figmaContext = await runTool<FigmaContext>("get_figma_context", {
-          figmaFileUrl,
-        });
+        const rawRequirements = await runStep("analyze_document", () =>
+          extractRequirementsFromDocument(doc)
+        );
 
-        const { policies: existingPolicies } = await runTool<{
+        const { policies: existingPolicies } = await runStep<{
           policies: RawPolicyRecord[];
           note: string | null;
-        }>("get_company_policies", {});
+        }>("get_company_policies", () => callMcpTool("get_company_policies", {}));
 
-        const { requirements: rawRequirements } = await runTool<{
-          requirements: RawRequirement[];
-        }>("analyze_requirements", { figmaContext });
-
-        const { policies: rawPolicies, conflicts: rawConflicts } = await runTool<{
+        const { policies: rawPolicies, conflicts: rawConflicts } = await runStep<{
           policies: RawPolicyAnalysisItem[];
           conflicts: RawPolicyConflict[];
-        }>("analyze_policies", { requirements: rawRequirements, existingPolicies });
+        }>("analyze_policies", () =>
+          callMcpTool("analyze_policies", { requirements: rawRequirements, existingPolicies })
+        );
 
-        const { exceptions } = await runTool<{ exceptions: ExceptionItem[] }>(
+        const { exceptions } = await runStep<{ exceptions: ExceptionItem[] }>(
           "analyze_exceptions",
-          { requirements: rawRequirements, policies: rawPolicies }
+          () =>
+            callMcpTool("analyze_exceptions", {
+              requirements: rawRequirements,
+              policies: rawPolicies,
+            })
         );
 
         const requirements: RequirementItem[] = rawRequirements.map((r) => ({
@@ -172,7 +176,9 @@ export async function POST(request: Request) {
         // 응답 자체는 그대로 반환한다.
         if (requirements.length > 0 || policies.length > 0) {
           await saveAnalysisResult({
-            figmaFileUrl,
+            // DB 컬럼명은 Figma 연동 시절 이름(figma_file_url) 그대로 쓴다 —
+            // 이제는 업로드된 파일명을 담는 용도로 재사용한다(마이그레이션 불필요).
+            figmaFileUrl: doc.fileName,
             requirements,
             policies,
             exceptions,
@@ -201,6 +207,54 @@ export async function POST(request: Request) {
       "X-Content-Type-Options": "nosniff",
     },
   });
+}
+
+/**
+ * Figma API 대신 업로드된 PNG/PDF를 Claude Vision/문서 분석으로 직접 읽어
+ * 요구사항을 도출한다. PNG는 파일 하나를 화면 하나로, PDF는 각 페이지를
+ * 화면 하나로 취급한다. get_figma_context + analyze_requirements(둘 다
+ * mcp-server 호출) 두 단계를 이 한 번의 호출로 대체한다.
+ */
+async function extractRequirementsFromDocument(
+  doc: UploadedDocument
+): Promise<Array<{ id: string; title: string; description: string; sourceFrame: string | null }>> {
+  const client = new Anthropic();
+
+  const contentBlock =
+    doc.mediaType === "application/pdf"
+      ? ({
+          type: "document",
+          source: { type: "base64", media_type: "application/pdf", data: doc.base64 },
+        } as const)
+      : ({
+          type: "image",
+          source: { type: "base64", media_type: "image/png", data: doc.base64 },
+        } as const);
+
+  const instruction =
+    doc.mediaType === "application/pdf"
+      ? "이 PDF 화면설계서를 분석해주세요. 각 페이지를 화면 하나로 보고, 화면마다 사용자가 수행할 수 있는 구체적인 기능 요구사항을 도출하세요."
+      : "이 화면설계서 이미지를 분석해주세요. 이미지 안에 여러 화면이 함께 있다면 각각을 화면 하나로 보고, 화면마다 사용자가 수행할 수 있는 구체적인 기능 요구사항을 도출하세요.";
+
+  const response = await client.messages.parse({
+    model: "claude-opus-5",
+    max_tokens: 16000,
+    output_config: { effort: "medium", format: zodOutputFormat(DocumentAnalysisSchema) },
+    system:
+      "당신은 PM을 돕는 분석 에이전트입니다. 업로드된 화면설계서를 읽고 요구사항 후보를 구조화해서 반환하세요. requirements[].id는 FR-01, FR-02... 형식으로 순서대로 부여하고, sourceFrame에는 그 요구사항이 나온 화면 이름이나 페이지 번호(예: '1페이지', '로그인 화면')를 적으세요.",
+    messages: [
+      {
+        role: "user",
+        content: [contentBlock, { type: "text", text: instruction }],
+      },
+    ],
+  });
+
+  if (!response.parsed_output) {
+    throw new Error("화면설계서에서 요구사항을 추출하지 못했습니다.");
+  }
+
+  return response.parsed_output.requirements;
 }
 
 /**

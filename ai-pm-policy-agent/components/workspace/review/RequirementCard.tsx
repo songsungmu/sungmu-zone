@@ -38,7 +38,7 @@ export function RequirementCard({ requirement }: RequirementCardProps) {
           ) : (
             <Sparkles className="size-3" />
           )}
-          {hasSource ? "Figma 근거" : "추론"}
+          {hasSource ? "문서 근거" : "추론"}
         </span>
       </CardContent>
     </Card>

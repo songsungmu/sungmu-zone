@@ -12,6 +12,7 @@ import {
   type ToolCallLogEntry,
 } from "@/components/workspace/ToolCallLog";
 import type { ChatMessage, ChatStreamEvent } from "@/types/chat";
+import type { DocumentUploadState } from "@/types/document";
 import type { AnalysisResult } from "@/types/review";
 
 const QUICK_ACTION_MESSAGE = "이 화면 정책 검토해줘";
@@ -23,11 +24,11 @@ const QUICK_ACTION_MESSAGE = "이 화면 정책 검토해줘";
  * 정책 요약 카드나 승인 버튼은 여기에 절대 렌더링하지 않는다.
  */
 interface ClaudePanelProps {
-  figmaFileUrl: string;
+  document: DocumentUploadState;
   onAnalysisComplete: (result: AnalysisResult) => void;
 }
 
-export function ClaudePanel({ figmaFileUrl, onAnalysisComplete }: ClaudePanelProps) {
+export function ClaudePanel({ document: doc, onAnalysisComplete }: ClaudePanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [toolCalls, setToolCalls] = useState<ToolCallLogEntry[]>([]);
   const [summaryText, setSummaryText] = useState<string | null>(null);
@@ -51,6 +52,11 @@ export function ClaudePanel({ figmaFileUrl, onAnalysisComplete }: ClaudePanelPro
     const trimmed = userText.trim();
     if (isAnalyzing || !trimmed) return;
 
+    if (!doc.base64 || !doc.mediaType) {
+      setErrorText("먼저 왼쪽에서 화면설계서(PNG/PDF)를 업로드해주세요.");
+      return;
+    }
+
     setIsAnalyzing(true);
     setSummaryText(null);
     setErrorText(null);
@@ -63,7 +69,14 @@ export function ClaudePanel({ figmaFileUrl, onAnalysisComplete }: ClaudePanelPro
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: nextMessages, figmaFileUrl }),
+        body: JSON.stringify({
+          messages: nextMessages,
+          document: {
+            fileName: doc.fileName,
+            mediaType: doc.mediaType,
+            base64: doc.base64,
+          },
+        }),
       });
 
       if (!res.ok || !res.body) {
@@ -163,7 +176,7 @@ export function ClaudePanel({ figmaFileUrl, onAnalysisComplete }: ClaudePanelPro
         <button
           type="button"
           onClick={() => void sendMessage(QUICK_ACTION_MESSAGE)}
-          disabled={isAnalyzing}
+          disabled={isAnalyzing || !doc.base64}
           className="w-fit rounded-full border bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
         >
           {QUICK_ACTION_MESSAGE}

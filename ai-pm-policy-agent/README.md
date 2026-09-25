@@ -72,7 +72,7 @@ mcp-server가 필요로 하는 환경변수와 배포 절차 전체는
 2. Supabase 프로젝트를 만들고 `supabase/migrations/0001_init.sql`을 적용한다.
 3. mcp-server를 Railway 또는 Render에 먼저 배포한다([`mcp-server/README.md`](./mcp-server/README.md) 참고) — `/healthz`로 기동을 확인하고 `/mcp` URL을 확보한다.
 4. Vercel에 메인 앱을 배포하면서, 위 표의 환경변수를 전부 등록한다(`MCP_SERVER_URL`에 3번에서 확보한 URL을 넣는다).
-5. `/workspace`에서 Figma 연결 → 정책 검토 → 리뷰 리스트 → 개별 승인 → 시트 반영까지 한 번 전체 플로우를 실행해 확인한다.
+5. `/workspace`에서 화면설계서(PNG/PDF) 업로드 → 정책 검토 → 리뷰 리스트 → 개별 승인 → 시트 반영까지 한 번 전체 플로우를 실행해 확인한다.
 
 ## Learn More
 

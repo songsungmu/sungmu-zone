@@ -17,7 +17,7 @@ export interface RequirementItem {
   id: string;
   title: string;
   description: string;
-  /** 있으면 "Figma 근거" 배지, 없으면 "추론" 배지로 표시한다. */
+  /** 있으면 "문서 근거" 배지, 없으면 "추론" 배지로 표시한다. */
   sourceFrame?: string;
 }
 

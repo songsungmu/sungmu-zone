@@ -3,13 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 
 import { ClaudePanel } from "@/components/workspace/ClaudePanel";
-import { FigmaPanel } from "@/components/workspace/FigmaPanel";
+import { DocumentUploadPanel } from "@/components/workspace/DocumentUploadPanel";
 import { GoogleSheetPanel } from "@/components/workspace/GoogleSheetPanel";
 import { Header } from "@/components/workspace/Header";
 import { DuplicateConfirmDialog } from "@/components/workspace/review/DuplicateConfirmDialog";
 import { ReviewListPanel } from "@/components/workspace/review/ReviewListPanel";
 import { createMockAnalysisResult } from "@/lib/mock-review-data";
-import { initialFigmaConnectionState } from "@/types/figma";
+import { initialDocumentUploadState } from "@/types/document";
 import type {
   AnalysisResult,
   PolicyConflict,
@@ -26,9 +26,11 @@ interface ApproveApiResponse {
 }
 
 export default function WorkspacePage() {
-  // Figma 연결 상태는 여기(상위)에서 관리한다 — Phase 7의 분석 요청 시
-  // 이 값을 그대로 함께 전달해야 하므로 FigmaPanel 내부에 가두지 않는다.
-  const [figma, setFigma] = useState(initialFigmaConnectionState);
+  // 업로드된 화면설계서(PNG/PDF) 상태는 여기(상위)에서 관리한다 — 분석
+  // 요청 시 이 값을 그대로 함께 전달해야 하므로 DocumentUploadPanel 내부에
+  // 가두지 않는다. Figma 연동을 완전히 대체한다(Figma API rate limit
+  // 문제로, 업로드 방식으로 전환).
+  const [uploadedDoc, setUploadedDoc] = useState(initialDocumentUploadState);
 
   // Google Sheet 연결 상태도 같은 이유로 상위에서 관리한다.
   const [sheet, setSheet] = useState(initialSheetConnectionState);
@@ -100,7 +102,7 @@ export default function WorkspacePage() {
     const res = await fetch("/api/policies/approve", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ policy, figmaFileUrl: figma.url, force }),
+      body: JSON.stringify({ policy, figmaFileUrl: uploadedDoc.fileName ?? "", force }),
     });
     const data = (await res.json().catch(() => ({}))) as ApproveApiResponse;
 
@@ -221,11 +223,11 @@ export default function WorkspacePage() {
       <div className="flex-1 space-y-4 p-4">
         <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
           <div className="h-64 min-h-40 resize-y overflow-auto rounded-xl">
-            <FigmaPanel value={figma} onChange={setFigma} />
+            <DocumentUploadPanel value={uploadedDoc} onChange={setUploadedDoc} />
           </div>
           <div className="h-64 min-h-40 resize-y overflow-auto rounded-xl">
             <ClaudePanel
-              figmaFileUrl={figma.url}
+              document={uploadedDoc}
               onAnalysisComplete={setAnalysisResult}
             />
           </div>
