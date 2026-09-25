@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { z } from "zod";
 
+import { extractRequirementsFromDocument, type RawRequirement } from "@/lib/core/documentAnalysis";
 import { callMcpTool } from "@/lib/core/mcpClient";
 import { saveAnalysisResult } from "@/lib/core/supabase";
 import type { ChatMessage } from "@/types/chat";
@@ -13,15 +12,18 @@ import type {
   RequirementItem,
 } from "@/types/review";
 
-interface UploadedDocument {
-  fileName: string;
-  mediaType: "image/png" | "application/pdf";
-  base64: string;
-}
-
 interface ChatRequestBody {
   messages: ChatMessage[];
-  document?: UploadedDocument;
+  fileName?: string;
+  /** 단일 호출로 분석할 문서(PNG, 또는 짧은 PDF 전체). */
+  document?: { mediaType: "image/png" | "application/pdf"; base64: string };
+  /**
+   * 페이지가 많은 PDF는 클라이언트가 미리 /api/chat/pdf-pages +
+   * /api/chat/analyze-page로 페이지별로 나눠 분석한 뒤, 그 결과를 여기로
+   * 보낸다 — 이 경우 이 라우트는 문서 분석 단계를 건너뛰고 바로 정책
+   * 분류/예외처리 분석으로 넘어간다.
+   */
+  requirements?: RawRequirement[];
 }
 
 // mcp-server가 반환하는 원시 shape (mcp-server/src/lib/schemas.ts와 대응).
@@ -46,17 +48,15 @@ interface RawPolicyConflict {
   description: string;
 }
 
-const DocumentAnalysisSchema = z.object({
-  requirements: z.array(
-    z.object({
-      id: z.string(),
-      title: z.string(),
-      description: z.string(),
-      /** 이 요구사항이 어느 화면(PNG는 파일 자체, PDF는 페이지)에서 나왔는지. */
-      sourceFrame: z.string(),
-    })
-  ),
-});
+/** FR-01, FR-02... 형식으로 다시 번호를 매긴다. 페이지별로 따로 분석된
+ *  요구사항들은 페이지마다 FR-01부터 다시 시작해서 번호가 겹치므로,
+ *  합친 뒤 여기서 한 번 더 순서대로 정리한다. */
+function renumberRequirements(requirements: RawRequirement[]): RawRequirement[] {
+  return requirements.map((r, index) => ({
+    ...r,
+    id: `FR-${String(index + 1).padStart(2, "0")}`,
+  }));
+}
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as ChatRequestBody | null;
@@ -66,7 +66,8 @@ export async function POST(request: Request) {
   }
 
   const doc = body.document;
-  if (!doc || !doc.base64 || !doc.mediaType) {
+  const providedRequirements = body.requirements;
+  if ((!doc || !doc.base64 || !doc.mediaType) && !providedRequirements) {
     return NextResponse.json(
       { error: "화면설계서(PNG/PDF)가 업로드되어 있지 않습니다." },
       { status: 400 }
@@ -80,6 +81,7 @@ export async function POST(request: Request) {
     );
   }
 
+  const fileName = body.fileName ?? null;
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream<Uint8Array>({
@@ -103,9 +105,9 @@ export async function POST(request: Request) {
       }
 
       try {
-        const rawRequirements = await runStep("analyze_document", () =>
-          extractRequirementsFromDocument(doc)
-        );
+        const rawRequirements = providedRequirements
+          ? renumberRequirements(providedRequirements)
+          : await runStep("analyze_document", () => extractRequirementsFromDocument(doc!));
 
         const { policies: existingPolicies } = await runStep<{
           policies: RawPolicyRecord[];
@@ -178,7 +180,7 @@ export async function POST(request: Request) {
           await saveAnalysisResult({
             // DB 컬럼명은 Figma 연동 시절 이름(figma_file_url) 그대로 쓴다 —
             // 이제는 업로드된 파일명을 담는 용도로 재사용한다(마이그레이션 불필요).
-            figmaFileUrl: doc.fileName,
+            figmaFileUrl: fileName,
             requirements,
             policies,
             exceptions,
@@ -207,58 +209,6 @@ export async function POST(request: Request) {
       "X-Content-Type-Options": "nosniff",
     },
   });
-}
-
-/**
- * Figma API 대신 업로드된 PNG/PDF를 Claude Vision/문서 분석으로 직접 읽어
- * 요구사항을 도출한다. PNG는 파일 하나를 화면 하나로, PDF는 각 페이지를
- * 화면 하나로 취급한다. get_figma_context + analyze_requirements(둘 다
- * mcp-server 호출) 두 단계를 이 한 번의 호출로 대체한다.
- */
-async function extractRequirementsFromDocument(
-  doc: UploadedDocument
-): Promise<Array<{ id: string; title: string; description: string; sourceFrame: string | null }>> {
-  const client = new Anthropic();
-
-  const contentBlock =
-    doc.mediaType === "application/pdf"
-      ? ({
-          type: "document",
-          source: { type: "base64", media_type: "application/pdf", data: doc.base64 },
-        } as const)
-      : ({
-          type: "image",
-          source: { type: "base64", media_type: "image/png", data: doc.base64 },
-        } as const);
-
-  const instruction =
-    doc.mediaType === "application/pdf"
-      ? "이 PDF 화면설계서를 분석해주세요. 각 페이지를 화면 하나로 보고, 화면마다 사용자가 수행할 수 있는 구체적인 기능 요구사항을 도출하세요."
-      : "이 화면설계서 이미지를 분석해주세요. 이미지 안에 여러 화면이 함께 있다면 각각을 화면 하나로 보고, 화면마다 사용자가 수행할 수 있는 구체적인 기능 요구사항을 도출하세요.";
-
-  const response = await client.messages.parse({
-    model: "claude-opus-5",
-    max_tokens: 4096,
-    // 이 호출은 Netlify 서버리스 함수의 30초 실행 제한 안에 끝나야 한다.
-    // 화면 여러 개가 함께 담긴 복잡한 이미지에서는 medium/high effort가
-    // 그 시간을 넘기는 걸 확인해서, 속도를 위해 low로 낮춘다 — 이미지를
-    // 읽고 구조화하는 작업이라 low effort로도 내용을 놓치지는 않는다.
-    output_config: { effort: "low", format: zodOutputFormat(DocumentAnalysisSchema) },
-    system:
-      "당신은 PM을 돕는 분석 에이전트입니다. 업로드된 화면설계서를 읽고 요구사항 후보를 구조화해서 반환하세요. requirements[].id는 FR-01, FR-02... 형식으로 순서대로 부여하고, sourceFrame에는 그 요구사항이 나온 화면 이름이나 페이지 번호(예: '1페이지', '로그인 화면')를 적으세요.",
-    messages: [
-      {
-        role: "user",
-        content: [contentBlock, { type: "text", text: instruction }],
-      },
-    ],
-  });
-
-  if (!response.parsed_output) {
-    throw new Error("화면설계서에서 요구사항을 추출하지 못했습니다.");
-  }
-
-  return response.parsed_output.requirements;
 }
 
 /**

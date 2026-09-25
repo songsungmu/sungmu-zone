@@ -17,6 +17,13 @@ import type { AnalysisResult } from "@/types/review";
 
 const QUICK_ACTION_MESSAGE = "이 화면 정책 검토해줘";
 
+interface RawRequirement {
+  id: string;
+  title: string;
+  description: string;
+  sourceFrame: string | null;
+}
+
 /**
  * 이 패널의 역할은 "실행 과정을 투명하게 보여주기"로 한정한다.
  * 정책/요구사항/예외처리 데이터를 이 컴포넌트가 직접 들고 있지 않고,
@@ -65,18 +72,66 @@ export function ClaudePanel({ document: doc, onAnalysisComplete }: ClaudePanelPr
     const nextMessages: ChatMessage[] = [...messages, { role: "user", content: trimmed }];
     setMessages(nextMessages);
 
+    function pushToolCall(id: string, label: string) {
+      if (!isMountedRef.current) return;
+      setToolCalls((prev) => [...prev, { id, label, status: "running" }]);
+    }
+    function markToolCallDone(id: string) {
+      if (!isMountedRef.current) return;
+      setToolCalls((prev) => prev.map((c) => (c.id === id ? { ...c, status: "done" } : c)));
+    }
+
     try {
+      // PDF는 페이지가 많으면 한 번에 분석할 때 서버 함수 실행 시간 제한을
+      // 넘기기 쉬워서, 페이지별로 나눠 각각 짧게 분석한 뒤 결과를 합친다.
+      // PNG는 화면 하나(또는 한 이미지 안의 여러 화면)를 한 번에 분석한다.
+      let requirements: RawRequirement[] | null = null;
+
+      if (doc.mediaType === "application/pdf") {
+        pushToolCall("split_pdf", "split_pdf_pages()");
+        const splitRes = await fetch("/api/chat/pdf-pages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ base64: doc.base64 }),
+        });
+        if (!splitRes.ok) {
+          const errBody = (await splitRes.json().catch(() => null)) as { error?: string } | null;
+          throw new Error(errBody?.error ?? `PDF 페이지 분리에 실패했습니다 (${splitRes.status}).`);
+        }
+        const { pages } = (await splitRes.json()) as { pages: string[] };
+        markToolCallDone("split_pdf");
+
+        requirements = [];
+        for (let i = 0; i < pages.length; i++) {
+          const stepId = `analyze_page_${i + 1}`;
+          pushToolCall(stepId, `analyze_page(${i + 1}/${pages.length})`);
+          const pageRes = await fetch("/api/chat/analyze-page", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ base64: pages[i], pageLabel: `${i + 1}페이지` }),
+          });
+          if (!pageRes.ok) {
+            const errBody = (await pageRes.json().catch(() => null)) as { error?: string } | null;
+            throw new Error(errBody?.error ?? `${i + 1}페이지 분석에 실패했습니다.`);
+          }
+          const pageData = (await pageRes.json()) as { requirements: RawRequirement[] };
+          requirements.push(...pageData.requirements);
+          markToolCallDone(stepId);
+        }
+      }
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: nextMessages,
-          document: {
-            fileName: doc.fileName,
-            mediaType: doc.mediaType,
-            base64: doc.base64,
-          },
-        }),
+        body: JSON.stringify(
+          requirements
+            ? { messages: nextMessages, fileName: doc.fileName, requirements }
+            : {
+                messages: nextMessages,
+                fileName: doc.fileName,
+                document: { mediaType: doc.mediaType, base64: doc.base64 },
+              }
+        ),
       });
 
       if (!res.ok || !res.body) {
@@ -96,14 +151,9 @@ export function ClaudePanel({ document: doc, onAnalysisComplete }: ClaudePanelPr
         if (!isMountedRef.current) return;
 
         if (event.type === "tool_call") {
-          setToolCalls((prev) => [
-            ...prev,
-            { id: event.id, label: `${event.name}()`, status: "running" },
-          ]);
+          pushToolCall(event.id, `${event.name}()`);
         } else if (event.type === "tool_done") {
-          setToolCalls((prev) =>
-            prev.map((c) => (c.id === event.id ? { ...c, status: "done" } : c))
-          );
+          markToolCallDone(event.id);
         } else if (event.type === "error") {
           throw new Error(event.message);
         } else if (event.type === "result") {
