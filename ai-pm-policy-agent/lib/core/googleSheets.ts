@@ -184,11 +184,22 @@ export async function getNextPolicyId(): Promise<string> {
  * 승인자(J열)는 지금은 비워둔다 — 이 앱에 아직 로그인/사용자 식별 개념이
  * 없어 호출자가 넘겨줄 값이 없다. 나중에 붙이려면 이 함수 입력에
  * approvedBy를 추가하면 된다.
+ *
+ * values.append(range: "A:J")를 쓰지 않는다 — Sheets API가 기존 데이터의
+ * "표 범위"를 자동 감지해서 그 뒤에 붙이는데, 시트 중간에 A/B열이 비어있는
+ * 행이 하나라도 있으면(예: 예전에 수동으로 넣은 행) 감지된 표가 C열부터
+ * 시작한다고 오판해서 새 행이 C열부터 밀려 들어가는 문제가 있었다. 대신
+ * 기존 데이터를 직접 읽어 "다음 빈 행 번호"를 계산하고 values.update로
+ * A{row}:J{row} 범위를 명시해서 항상 A열부터 정확히 정렬되도록 쓴다.
  */
 export async function appendPolicy(
   policy: NewPolicyInput
 ): Promise<{ policyId: string }> {
-  const policyId = await getNextPolicyId();
+  const rows = await readExistingPolicyRows();
+  const policyId = computeNextPolicyId(rows.map((r) => r.policy));
+  const nextRowNumber =
+    rows.length > 0 ? Math.max(...rows.map((r) => r.rowNumber)) + 1 : 2;
+
   const sheets = getSheetsClient();
   const spreadsheetId = getSheetId();
 
@@ -206,11 +217,10 @@ export async function appendPolicy(
   ];
 
   await withRetry(() =>
-    sheets.spreadsheets.values.append({
+    sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: "A:J",
+      range: `A${nextRowNumber}:J${nextRowNumber}`,
       valueInputOption: "RAW",
-      insertDataOption: "INSERT_ROWS",
       requestBody: { values: [row] },
     })
   );
