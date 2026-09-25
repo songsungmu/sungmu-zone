@@ -11,7 +11,7 @@ export function Header() {
         </div>
         <div>
           <div className="flex items-baseline gap-2">
-            <span className="text-base font-semibold">PM Agent</span>
+            <span className="text-base font-semibold">Internal Policy Agent</span>
           </div>
           <p className="text-xs font-medium tracking-wide text-muted-foreground">
             POLICY REVIEW CONSOLE

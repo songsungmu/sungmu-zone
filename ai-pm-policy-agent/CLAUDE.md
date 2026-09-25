@@ -25,8 +25,8 @@ PM이 Figma 화면설계서를 기준으로, Claude가 회사 정책 시트(Goog
 
 - **브랜드 컬러**: 파란색 계열 (`--primary` 토큰). Primary 버튼, 링크, 강조
   텍스트에 사용.
-- **헤더**: 파란 사각형 shield 아이콘 로고 + "PM Agent" + "POLICY REVIEW
-  CONSOLE" 서브타이틀. 우측에 인프라 상태 표시 + 버전 배지.
+- **헤더**: 파란 사각형 shield 아이콘 로고 + "Internal Policy Agent" + "POLICY
+  REVIEW CONSOLE" 서브타이틀. 우측에 인프라 상태 표시 + 버전 배지.
 - **카드**: 흰 배경, 옅은 회색 테두리, 둥근 모서리(12px, `--radius-xl` 토큰).
 - **상태 배지 4종**: `Badge`의 `confirmed`(초록) / `suggested`(파랑) /
   `need-decision`(주황) / `conflict`(빨강) variant만 사용한다. 이 4개
