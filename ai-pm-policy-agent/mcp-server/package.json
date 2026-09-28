@@ -1,0 +1,27 @@
+{
+  "name": "ai-pm-policy-agent-mcp-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI PM Policy Agent 원격 MCP 서버 — 읽기/분석 전용 툴만 제공한다. Google Sheet 쓰기 로직은 절대 포함하지 않는다.",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@supabase/supabase-js": "^2.115.0",
+    "express": "^5.2.1",
+    "googleapis": "^178.0.0",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^20",
+    "tsx": "^4.19.2",
+    "typescript": "^5"
+  }
+}
