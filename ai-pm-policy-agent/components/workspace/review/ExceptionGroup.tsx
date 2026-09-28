@@ -1,4 +1,4 @@
-import { SectionHeader } from "@/components/workspace/review/SectionHeader";
+import { Card, CardContent } from "@/components/ui/card";
 import type { ExceptionCategory, ExceptionItem } from "@/types/review";
 
 const CATEGORY_LABEL: Record<ExceptionCategory, string> = {
@@ -17,25 +17,28 @@ export function ExceptionGroup({ category, exceptions }: ExceptionGroupProps) {
   if (exceptions.length === 0) return null;
 
   return (
-    <section>
-      <SectionHeader label={CATEGORY_LABEL[category]} count={exceptions.length} />
-      <ul className="divide-y">
+    <div className="space-y-2">
+      <h3 className="text-sm font-semibold">
+        {CATEGORY_LABEL[category]}{" "}
+        <span className="text-muted-foreground">· {exceptions.length}건</span>
+      </h3>
+      <div className="space-y-2">
         {exceptions.map((item) => (
-          <li
-            key={item.id}
-            className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-start gap-4 px-5 py-3.5 transition-colors hover:bg-muted/40"
-          >
-            <span className="pt-px font-mono text-xs text-muted-foreground">{item.id}</span>
-            <div className="min-w-0">
-              <p className="text-[13px] font-medium">{item.situation}</p>
-              <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
-                <span className="mr-1.5 text-xs font-medium text-foreground/70">처리</span>
-                {item.handling}
+          <Card key={item.id} className="py-0">
+            <CardContent className="px-4 py-3">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs text-muted-foreground">
+                  {item.id}
+                </span>
+                <span className="text-sm font-semibold">{item.situation}</span>
+              </div>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                → {item.handling}
               </p>
-            </div>
-          </li>
+            </CardContent>
+          </Card>
         ))}
-      </ul>
-    </section>
+      </div>
+    </div>
   );
 }

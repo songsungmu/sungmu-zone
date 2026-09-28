@@ -1,18 +1,31 @@
+import { Shield } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+
 export function Header() {
   return (
-    <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between border-b bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b bg-card px-8 py-4">
       <div className="flex items-center gap-3">
-        <span className="size-2.5 rounded-[3px] bg-primary" aria-hidden />
-        <span className="text-[15px] font-semibold tracking-[-0.02em] whitespace-nowrap">
-          Internal Policy Agent
-        </span>
-        <span className="hidden h-4 w-px bg-border sm:block" aria-hidden />
-        <span className="hidden text-[13px] text-muted-foreground sm:inline">
-          Policy Review Console
-        </span>
+        <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <Shield className="size-5" />
+        </div>
+        <div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-base font-semibold">Internal Policy Agent</span>
+          </div>
+          <p className="text-xs font-medium tracking-wide text-muted-foreground">
+            POLICY REVIEW CONSOLE
+          </p>
+        </div>
       </div>
 
-      <span className="font-mono text-[11px] text-muted-foreground">v0.1.0</span>
+      <div className="flex items-center gap-3 text-sm">
+        <span className="flex items-center gap-1.5 text-muted-foreground">
+          <span className="size-2 rounded-full bg-status-confirmed-foreground" />
+          인프라 정상 작동중
+        </span>
+        <Badge variant="outline">v0.1.0</Badge>
+      </div>
     </header>
   );
 }

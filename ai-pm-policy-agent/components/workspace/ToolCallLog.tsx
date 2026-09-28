@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 
 export type ToolCallStatus = "running" | "done";
 
@@ -12,30 +12,21 @@ interface ToolCallLogProps {
   calls: ToolCallLogEntry[];
 }
 
-/** 분석 단계를 세로 진행 목록으로 보여준다. */
 export function ToolCallLog({ calls }: ToolCallLogProps) {
   if (calls.length === 0) return null;
 
   return (
-    <ol className="space-y-2.5">
+    <ul className="space-y-1 rounded-md bg-muted px-3 py-2 font-mono text-[11px] text-muted-foreground">
       {calls.map((call) => (
-        <li key={call.id} className="flex items-center gap-2.5 text-[13px]">
+        <li key={call.id} className="flex items-center gap-1.5">
           {call.status === "done" ? (
-            <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-primary/10">
-              <Check className="size-2.5 text-primary" strokeWidth={3} />
-            </span>
+            <Check className="size-3 shrink-0 text-status-confirmed-foreground" />
           ) : (
-            <span className="size-4 shrink-0 animate-spin rounded-full border-[1.5px] border-primary/20 border-t-primary" />
+            <Loader2 className="size-3 shrink-0 animate-spin" />
           )}
-          <span
-            className={
-              call.status === "done" ? "text-muted-foreground" : "font-medium text-foreground"
-            }
-          >
-            {call.label}
-          </span>
+          <span className="truncate">{call.label}</span>
         </li>
       ))}
-    </ol>
+    </ul>
   );
 }
