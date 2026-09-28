@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Send, Sparkles } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Panel, PanelHeader, StatusDot } from "@/components/workspace/Panel";
 import {
   ToolCallLog,
   type ToolCallLogEntry,
@@ -15,7 +14,15 @@ import type { ChatMessage, ChatStreamEvent } from "@/types/chat";
 import type { DocumentUploadState } from "@/types/document";
 import type { AnalysisResult } from "@/types/review";
 
-const QUICK_ACTION_MESSAGE = "이 화면 정책 검토해줘";
+const DEFAULT_REQUEST_MESSAGE = "이 화면 정책 검토해줘";
+
+/** 서버가 보내는 단계 이름을 사람이 읽는 라벨로 바꾼다. */
+const STEP_LABELS: Record<string, string> = {
+  analyze_document: "화면설계서 분석",
+  get_company_policies: "기존 정책 불러오기",
+  analyze_policies: "정책 분류 및 충돌 확인",
+  analyze_exceptions: "예외 케이스 도출",
+};
 
 interface RawRequirement {
   id: string;
@@ -60,7 +67,7 @@ export function ClaudePanel({ document: doc, onAnalysisComplete }: ClaudePanelPr
     if (isAnalyzing || !trimmed) return;
 
     if (!doc.base64 || !doc.mediaType) {
-      setErrorText("먼저 왼쪽에서 화면설계서(PNG/PDF)를 업로드해주세요.");
+      setErrorText("먼저 화면설계서(PNG/PDF)를 업로드해주세요.");
       return;
     }
 
@@ -88,7 +95,7 @@ export function ClaudePanel({ document: doc, onAnalysisComplete }: ClaudePanelPr
       let requirements: RawRequirement[] | null = null;
 
       if (doc.mediaType === "application/pdf") {
-        pushToolCall("split_pdf", "split_pdf_pages()");
+        pushToolCall("split_pdf", "PDF 페이지 분리");
         const splitRes = await fetch("/api/chat/pdf-pages", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -104,7 +111,7 @@ export function ClaudePanel({ document: doc, onAnalysisComplete }: ClaudePanelPr
         requirements = [];
         for (let i = 0; i < pages.length; i++) {
           const stepId = `analyze_page_${i + 1}`;
-          pushToolCall(stepId, `analyze_page(${i + 1}/${pages.length})`);
+          pushToolCall(stepId, `페이지 분석 ${i + 1} / ${pages.length}`);
           const pageRes = await fetch("/api/chat/analyze-page", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -151,7 +158,7 @@ export function ClaudePanel({ document: doc, onAnalysisComplete }: ClaudePanelPr
         if (!isMountedRef.current) return;
 
         if (event.type === "tool_call") {
-          pushToolCall(event.id, `${event.name}()`);
+          pushToolCall(event.id, STEP_LABELS[event.name] ?? event.name);
         } else if (event.type === "tool_done") {
           markToolCallDone(event.id);
         } else if (event.type === "error") {
@@ -200,62 +207,78 @@ export function ClaudePanel({ document: doc, onAnalysisComplete }: ClaudePanelPr
     }
   }
 
-  function handleSend() {
-    if (isAnalyzing || !messageDraft.trim()) return;
-    const text = messageDraft;
+  function handleStart() {
+    if (isAnalyzing) return;
+    const text = messageDraft.trim() || DEFAULT_REQUEST_MESSAGE;
     setMessageDraft("");
     void sendMessage(text);
   }
 
+  const hasRun = toolCalls.length > 0 || summaryText !== null || errorText !== null;
+  const status = isAnalyzing
+    ? { tone: "active" as const, label: "분석 중" }
+    : errorText
+      ? { tone: "error" as const, label: "실패" }
+      : summaryText
+        ? { tone: "success" as const, label: "완료" }
+        : { tone: "idle" as const, label: "대기" };
+
   return (
-    <Card className="flex h-full flex-col gap-0 overflow-hidden py-0">
-      <CardHeader className="border-b py-3">
-        <CardTitle className="flex items-center justify-between text-sm font-semibold">
-          <span className="flex items-center gap-2">
-            <Sparkles className="size-4 text-muted-foreground" />
-            Claude
-          </span>
-          <Badge variant="outline" className="gap-1.5 font-normal">
-            <span className="size-1.5 rounded-full bg-status-confirmed-foreground" />
-            MCP 연결됨
-          </Badge>
-        </CardTitle>
-      </CardHeader>
+    <Panel>
+      <PanelHeader
+        title="정책 검토"
+        aside={<StatusDot tone={status.tone}>{status.label}</StatusDot>}
+      />
 
-      <CardContent className="flex flex-1 flex-col gap-2 overflow-auto py-3">
-        <button
-          type="button"
-          onClick={() => void sendMessage(QUICK_ACTION_MESSAGE)}
-          disabled={isAnalyzing || !doc.base64}
-          className="w-fit rounded-full border bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
-        >
-          {QUICK_ACTION_MESSAGE}
-        </button>
+      <div className="flex-1 space-y-4 overflow-auto px-5 py-4">
+        {hasRun ? (
+          <>
+            <ToolCallLog calls={toolCalls} />
 
-        <ToolCallLog calls={toolCalls} />
+            {summaryText && (
+              <p className="border-t pt-3 text-[13px] leading-relaxed text-foreground">
+                {summaryText}
+              </p>
+            )}
 
-        {summaryText && <p className="text-xs text-foreground">{summaryText}</p>}
-        {errorText && <p className="text-xs text-destructive">{errorText}</p>}
-      </CardContent>
+            {errorText && (
+              <div className="flex gap-2 rounded-md bg-status-conflict px-3 py-2.5 text-xs leading-relaxed text-status-conflict-foreground">
+                <AlertCircle className="mt-px size-3.5 shrink-0" />
+                <p className="min-w-0 break-words">{errorText}</p>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="space-y-1.5">
+            <p className="text-[13px] leading-relaxed text-foreground">
+              화면설계서에서 요구사항을 추출하고, 회사 정책 시트와 비교해 정책과 예외
+              케이스를 정리합니다.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {doc.base64
+                ? "필요하면 아래에 추가로 확인할 내용을 적고 검토를 시작하세요."
+                : "먼저 화면설계서를 업로드하세요."}
+            </p>
+          </div>
+        )}
+      </div>
 
-      <div className="flex items-center gap-2 border-t p-3">
+      <div className="flex shrink-0 items-center gap-2 border-t p-3">
         <Input
-          placeholder="메시지 입력"
+          placeholder="추가로 확인할 내용 (선택)"
           value={messageDraft}
           onChange={(e) => setMessageDraft(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          onKeyDown={(e) => e.key === "Enter" && handleStart()}
           disabled={isAnalyzing}
-          className="h-8 text-xs"
         />
         <Button
-          size="icon"
-          className="size-8 shrink-0"
-          onClick={handleSend}
-          disabled={isAnalyzing}
+          className="shrink-0"
+          onClick={handleStart}
+          disabled={isAnalyzing || !doc.base64}
         >
-          <Send className="size-3.5" />
+          {isAnalyzing ? "분석 중" : summaryText ? "다시 검토" : "검토 시작"}
         </Button>
       </div>
-    </Card>
+    </Panel>
   );
 }

@@ -1,35 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Check } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import type { PolicyClassification, PolicyDecision, PolicyItem } from "@/types/review";
 
-function classificationBadgeVariant(classification: PolicyClassification) {
-  switch (classification) {
-    case "confirmed":
-      return "confirmed" as const;
-    case "suggested":
-      return "suggested" as const;
-    case "need_decision":
-      return "need-decision" as const;
-  }
-}
-
-function classificationLabel(classification: PolicyClassification) {
-  switch (classification) {
-    case "confirmed":
-      return "Confirmed";
-    case "suggested":
-      return "Suggested";
-    case "need_decision":
-      return "Need decision";
-  }
-}
+export const CLASSIFICATION_META: Record<
+  PolicyClassification,
+  { label: string; variant: "confirmed" | "suggested" | "need-decision" }
+> = {
+  confirmed: { label: "확정", variant: "confirmed" },
+  suggested: { label: "제안", variant: "suggested" },
+  need_decision: { label: "결정 필요", variant: "need-decision" },
+};
 
 interface PolicyCardProps {
   policy: PolicyItem;
@@ -50,9 +37,7 @@ export function PolicyCard({
 }: PolicyCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [draftContent, setDraftContent] = useState(policy.content);
-  const [isDecisionOpen, setIsDecisionOpen] = useState(false);
-  const [selectedDecision, setSelectedDecision] =
-    useState<PolicyDecision>("apply_new");
+  const [selectedDecision, setSelectedDecision] = useState<PolicyDecision>("apply_new");
 
   function handleStartEdit() {
     setDraftContent(policy.content);
@@ -65,77 +50,64 @@ export function PolicyCard({
     setIsEditing(false);
   }
 
-  function handleConfirmDecision() {
-    onDecide(policy, selectedDecision);
-    setIsDecisionOpen(false);
-  }
-
   const isRejected = policy.approvalStatus === "rejected";
+  const meta = CLASSIFICATION_META[policy.classification];
 
   return (
-    <Card className={isRejected ? "py-0 opacity-50" : "py-0"}>
-      <CardContent className="space-y-3 px-4 py-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-xs text-muted-foreground">
-                {policy.id}
-              </span>
-              <span className="text-sm font-semibold">{policy.title}</span>
-              {isRejected && (
-                <span className="text-[11px] font-medium text-muted-foreground">
-                  반려됨
-                </span>
-              )}
-            </div>
+    <li
+      className={cn(
+        "grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-start gap-4 px-5 py-4 transition-colors hover:bg-muted/40",
+        isRejected && "opacity-45"
+      )}
+    >
+      <span className="pt-px font-mono text-xs text-muted-foreground">{policy.id}</span>
 
-            {isEditing ? (
-              <Textarea
-                value={draftContent}
-                onChange={(e) => setDraftContent(e.target.value)}
-                className="mt-1.5 text-xs"
-                rows={3}
-              />
-            ) : (
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                {policy.content}
-              </p>
+      <div className="min-w-0 space-y-2">
+        <div>
+          <p className="text-[13px] font-medium">
+            {policy.title}
+            {isRejected && (
+              <span className="ml-2 text-xs font-normal text-muted-foreground">반려됨</span>
             )}
+          </p>
 
-            {policy.rationale && !isEditing && (
-              <p className="mt-1 text-[11px] italic text-muted-foreground">
-                근거: {policy.rationale}
-              </p>
-            )}
+          {isEditing ? (
+            <Textarea
+              value={draftContent}
+              onChange={(e) => setDraftContent(e.target.value)}
+              className="mt-2"
+              rows={3}
+            />
+          ) : (
+            <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
+              {policy.content}
+            </p>
+          )}
 
-            {policy.approvalStatus === "approved" && (
-              <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-status-confirmed-foreground">
-                <CheckCircle2 className="size-3" />
-                정책 시트에 반영됨
-              </p>
-            )}
-          </div>
+          {policy.rationale && !isEditing && (
+            <p className="mt-1.5 text-xs text-muted-foreground/80">
+              근거 — {policy.rationale}
+            </p>
+          )}
 
-          <Badge
-            variant={classificationBadgeVariant(policy.classification)}
-            className="shrink-0"
-          >
-            {classificationLabel(policy.classification)}
-          </Badge>
+          {policy.approvalStatus === "approved" && (
+            <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-status-confirmed-foreground">
+              <Check className="size-3" strokeWidth={2.5} />
+              정책 시트에 반영됨
+            </p>
+          )}
         </div>
-
-        {/* confirmed: 액션 없음, 배지만 */}
 
         {policy.classification === "suggested" &&
           !isRejected &&
           (isEditing ? (
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               <Button size="sm" onClick={handleSaveEdit} disabled={isSubmitting}>
-                저장
+                저장 후 승인
               </Button>
               <Button
                 size="sm"
-                variant="outline"
+                variant="ghost"
                 onClick={() => setIsEditing(false)}
                 disabled={isSubmitting}
               >
@@ -143,22 +115,17 @@ export function PolicyCard({
               </Button>
             </div>
           ) : (
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               <Button size="sm" onClick={() => onApprove(policy)} disabled={isSubmitting}>
-                {isSubmitting ? "처리 중..." : "승인"}
+                {isSubmitting ? "처리 중" : "승인"}
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleStartEdit}
-                disabled={isSubmitting}
-              >
+              <Button size="sm" variant="outline" onClick={handleStartEdit} disabled={isSubmitting}>
                 수정
               </Button>
               <Button
                 size="sm"
-                variant="outline"
-                className="text-destructive hover:text-destructive"
+                variant="ghost"
+                className="hover:text-destructive"
                 onClick={() => onReject(policy)}
                 disabled={isSubmitting}
               >
@@ -168,46 +135,41 @@ export function PolicyCard({
           ))}
 
         {policy.classification === "need_decision" && (
-          <div>
-            <button
-              type="button"
-              onClick={() => setIsDecisionOpen((open) => !open)}
-              className="flex items-center gap-1.5 text-xs font-semibold text-status-need-decision-foreground hover:underline"
+          <div className="flex flex-wrap items-center gap-1.5">
+            <div className="inline-flex rounded-md border p-0.5">
+              {(
+                [
+                  ["keep_existing", "기존 정책 유지"],
+                  ["apply_new", "신규 정책 적용"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setSelectedDecision(value)}
+                  className={cn(
+                    "h-6 rounded-[4px] px-2.5 text-xs transition-colors",
+                    selectedDecision === value
+                      ? "bg-primary/10 font-medium text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <Button
+              size="sm"
+              onClick={() => onDecide(policy, selectedDecision)}
+              disabled={isSubmitting}
             >
-              <AlertTriangle className="size-3.5" />
-              결정 필요 — 클릭해서 선택하기
-            </button>
-
-            {isDecisionOpen && (
-              <div className="mt-2 space-y-2 rounded-md border bg-muted/50 p-3">
-                <label className="flex cursor-pointer items-center gap-2 text-xs">
-                  <input
-                    type="radio"
-                    name={`decision-${policy.id}`}
-                    checked={selectedDecision === "keep_existing"}
-                    onChange={() => setSelectedDecision("keep_existing")}
-                    className="accent-primary"
-                  />
-                  기존 정책 유지
-                </label>
-                <label className="flex cursor-pointer items-center gap-2 text-xs">
-                  <input
-                    type="radio"
-                    name={`decision-${policy.id}`}
-                    checked={selectedDecision === "apply_new"}
-                    onChange={() => setSelectedDecision("apply_new")}
-                    className="accent-primary"
-                  />
-                  신규 정책 적용
-                </label>
-                <Button size="sm" onClick={handleConfirmDecision} disabled={isSubmitting}>
-                  {isSubmitting ? "처리 중..." : "결정 완료"}
-                </Button>
-              </div>
-            )}
+              {isSubmitting ? "처리 중" : "결정"}
+            </Button>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      <Badge variant={meta.variant}>{meta.label}</Badge>
+    </li>
   );
 }

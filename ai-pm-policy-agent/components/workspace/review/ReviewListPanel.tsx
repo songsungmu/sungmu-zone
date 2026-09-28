@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Panel } from "@/components/workspace/Panel";
 import { ConflictBanner } from "@/components/workspace/review/ConflictBanner";
 import { ExceptionGroup } from "@/components/workspace/review/ExceptionGroup";
 import { PolicyGroup } from "@/components/workspace/review/PolicyGroup";
@@ -13,12 +13,7 @@ import type {
   RequirementItem,
 } from "@/types/review";
 
-const EXCEPTION_CATEGORIES: ExceptionCategory[] = [
-  "system",
-  "policy",
-  "user",
-  "boundary",
-];
+const EXCEPTION_CATEGORIES: ExceptionCategory[] = ["system", "policy", "user", "boundary"];
 
 interface ReviewListPanelProps {
   requirements: RequirementItem[];
@@ -33,6 +28,15 @@ interface ReviewListPanelProps {
   onResolveConflict: (conflict: PolicyConflict, resolution: PolicyDecision) => void;
 }
 
+function TabLabel({ label, count }: { label: string; count: number }) {
+  return (
+    <>
+      {label}
+      <span className="text-xs font-normal text-muted-foreground">{count}</span>
+    </>
+  );
+}
+
 export function ReviewListPanel({
   requirements,
   policies,
@@ -45,89 +49,84 @@ export function ReviewListPanel({
   onDecide,
   onResolveConflict,
 }: ReviewListPanelProps) {
-  const needDecisionPolicies = policies.filter(
-    (p) => p.classification === "need_decision"
-  );
-  const suggestedPolicies = policies.filter(
-    (p) => p.classification === "suggested"
-  );
-  const confirmedPolicies = policies.filter(
-    (p) => p.classification === "confirmed"
-  );
+  const groupProps = { pendingPolicyIds, onApprove, onReject, onEdit, onDecide };
+  const pendingDecisionCount =
+    policies.filter((p) => p.classification === "need_decision").length + conflicts.length;
 
   return (
-    <Card className="flex h-full flex-col gap-0 overflow-hidden py-0">
-      <Tabs defaultValue="requirements" className="flex h-full flex-col gap-0">
-        <CardHeader className="border-b py-3">
+    <Panel>
+      <Tabs defaultValue="requirements" className="flex h-full min-h-0 flex-col gap-0">
+        <div className="flex h-12 shrink-0 items-stretch justify-between border-b px-5">
           <TabsList>
             <TabsTrigger value="requirements">
-              요구사항 {requirements.length}
+              <TabLabel label="요구사항" count={requirements.length} />
             </TabsTrigger>
-            <TabsTrigger value="policies">정책 {policies.length}</TabsTrigger>
+            <TabsTrigger value="policies">
+              <TabLabel label="정책" count={policies.length} />
+            </TabsTrigger>
             <TabsTrigger value="exceptions">
-              예외처리 {exceptions.length}
+              <TabLabel label="예외처리" count={exceptions.length} />
             </TabsTrigger>
           </TabsList>
-        </CardHeader>
 
-        <CardContent className="flex-1 overflow-auto py-4">
-          <TabsContent value="requirements" className="space-y-2">
+          {pendingDecisionCount > 0 && (
+            <span className="hidden self-center text-xs text-status-need-decision-foreground sm:inline">
+              검토가 필요한 항목 {pendingDecisionCount}건
+            </span>
+          )}
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-auto">
+          <TabsContent value="requirements">
             {requirements.length === 0 ? (
-              <EmptyState text="아직 분석된 요구사항이 없습니다." />
+              <EmptyState />
             ) : (
-              requirements.map((requirement) => (
-                <RequirementCard key={requirement.id} requirement={requirement} />
-              ))
+              <ul className="divide-y">
+                {requirements.map((requirement) => (
+                  <RequirementCard key={requirement.id} requirement={requirement} />
+                ))}
+              </ul>
             )}
           </TabsContent>
 
-          <TabsContent value="policies" className="space-y-4">
+          <TabsContent value="policies">
             {policies.length === 0 && conflicts.length === 0 ? (
-              <EmptyState text="아직 분석된 정책이 없습니다." />
+              <EmptyState />
             ) : (
               <>
-                {conflicts.map((conflict) => (
-                  <ConflictBanner
-                    key={conflict.id}
-                    conflict={conflict}
-                    onResolve={onResolveConflict}
-                  />
-                ))}
-
+                {conflicts.length > 0 && (
+                  <div className="space-y-3 border-b px-5 py-4">
+                    {conflicts.map((conflict) => (
+                      <ConflictBanner
+                        key={conflict.id}
+                        conflict={conflict}
+                        onResolve={onResolveConflict}
+                      />
+                    ))}
+                  </div>
+                )}
                 <PolicyGroup
                   classification="need_decision"
-                  policies={needDecisionPolicies}
-                  pendingPolicyIds={pendingPolicyIds}
-                  onApprove={onApprove}
-                  onReject={onReject}
-                  onEdit={onEdit}
-                  onDecide={onDecide}
+                  policies={policies.filter((p) => p.classification === "need_decision")}
+                  {...groupProps}
                 />
                 <PolicyGroup
                   classification="suggested"
-                  policies={suggestedPolicies}
-                  pendingPolicyIds={pendingPolicyIds}
-                  onApprove={onApprove}
-                  onReject={onReject}
-                  onEdit={onEdit}
-                  onDecide={onDecide}
+                  policies={policies.filter((p) => p.classification === "suggested")}
+                  {...groupProps}
                 />
                 <PolicyGroup
                   classification="confirmed"
-                  policies={confirmedPolicies}
-                  pendingPolicyIds={pendingPolicyIds}
-                  onApprove={onApprove}
-                  onReject={onReject}
-                  onEdit={onEdit}
-                  onDecide={onDecide}
+                  policies={policies.filter((p) => p.classification === "confirmed")}
+                  {...groupProps}
                 />
               </>
             )}
           </TabsContent>
 
-          <TabsContent value="exceptions" className="space-y-4">
+          <TabsContent value="exceptions">
             {exceptions.length === 0 ? (
-              <EmptyState text="아직 분석된 예외처리 케이스가 없습니다." />
+              <EmptyState />
             ) : (
               EXCEPTION_CATEGORIES.map((category) => (
                 <ExceptionGroup
@@ -138,14 +137,19 @@ export function ReviewListPanel({
               ))
             )}
           </TabsContent>
-        </CardContent>
+        </div>
       </Tabs>
-    </Card>
+    </Panel>
   );
 }
 
-function EmptyState({ text }: { text: string }) {
+function EmptyState() {
   return (
-    <p className="py-8 text-center text-sm text-muted-foreground">{text}</p>
+    <div className="flex flex-col items-center justify-center gap-1 py-16 text-center">
+      <p className="text-[13px] font-medium">아직 분석 결과가 없습니다</p>
+      <p className="text-xs text-muted-foreground">
+        화면설계서를 업로드하고 정책 검토를 시작하세요.
+      </p>
+    </div>
   );
 }

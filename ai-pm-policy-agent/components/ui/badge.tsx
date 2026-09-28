@@ -4,28 +4,23 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
+const STATUS_BASE =
+  "border-transparent before:size-1.5 before:rounded-full before:bg-current before:content-['']";
+
 const badgeVariants = cva(
-  "inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden",
+  "inline-flex items-center justify-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 [&>svg]:pointer-events-none overflow-hidden",
   {
     variants: {
       variant: {
-        default:
-          "border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
-        secondary:
-          "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
-        destructive:
-          "border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20",
-        outline:
-          "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+        default: "border-transparent bg-primary text-primary-foreground",
+        secondary: "border-transparent bg-secondary text-secondary-foreground",
+        destructive: "border-transparent bg-destructive text-white",
+        outline: "text-muted-foreground",
         // 상태 배지 4종 — 프로젝트 전체에서 리뷰 항목 상태 표시는 이 4개 variant만 사용한다.
-        confirmed:
-          "border-transparent bg-status-confirmed text-status-confirmed-foreground",
-        suggested:
-          "border-transparent bg-status-suggested text-status-suggested-foreground",
-        "need-decision":
-          "border-transparent bg-status-need-decision text-status-need-decision-foreground",
-        conflict:
-          "border-transparent bg-status-conflict text-status-conflict-foreground",
+        confirmed: `${STATUS_BASE} bg-status-confirmed text-status-confirmed-foreground`,
+        suggested: `${STATUS_BASE} bg-status-suggested text-status-suggested-foreground`,
+        "need-decision": `${STATUS_BASE} bg-status-need-decision text-status-need-decision-foreground`,
+        conflict: `${STATUS_BASE} bg-status-conflict text-status-conflict-foreground`,
       },
     },
     defaultVariants: {

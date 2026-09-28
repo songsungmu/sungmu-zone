@@ -211,21 +211,29 @@ export default function WorkspacePage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-secondary/40">
+    <div className="flex min-h-screen flex-col bg-background">
       <Header />
 
       {/*
-        각 카드 오른쪽 아래 모서리를 드래그하면 그 카드만 커지거나 작아진다
-        (CSS resize). 다른 영역을 줄이는 대신, 카드가 커진 만큼 페이지 전체
+        각 영역 오른쪽 아래 모서리를 드래그하면 그 영역만 커지거나 작아진다
+        (CSS resize). 다른 영역을 줄이는 대신, 커진 만큼 페이지 전체
         길이가 늘어나서 아래로 스크롤해 볼 수 있다 — 그래서 바깥 컨테이너에
         높이를 고정하지 않고 자연스러운 문서 흐름(block)으로 둔다.
       */}
-      <div className="flex-1 space-y-4 p-4">
-        <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
-          <div className="h-64 min-h-40 resize-y overflow-auto rounded-xl">
+      <main className="mx-auto w-full max-w-[1440px] flex-1 space-y-5 px-6 pt-8 pb-12">
+        <div className="space-y-1">
+          <h1 className="text-xl font-semibold tracking-[-0.02em]">정책 검토</h1>
+          <p className="text-[13px] text-muted-foreground">
+            화면설계서에서 요구사항·정책·예외 케이스를 도출하고, 승인한 정책만 정책
+            시트에 반영합니다.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 items-start gap-5 md:grid-cols-2">
+          <div className="h-72 min-h-44 resize-y overflow-auto rounded-lg">
             <DocumentUploadPanel value={uploadedDoc} onChange={setUploadedDoc} />
           </div>
-          <div className="h-64 min-h-40 resize-y overflow-auto rounded-xl">
+          <div className="h-72 min-h-44 resize-y overflow-auto rounded-lg">
             <ClaudePanel
               document={uploadedDoc}
               onAnalysisComplete={setAnalysisResult}
@@ -233,8 +241,8 @@ export default function WorkspacePage() {
           </div>
         </div>
 
-        {/* 중단 리뷰 리스트 — 화면에서 가장 큰 비중을 차지하도록 기본 높이를 크게 잡는다 */}
-        <div className="h-[28rem] min-h-64 resize-y overflow-auto rounded-xl">
+        {/* 리뷰 리스트 — 화면에서 가장 큰 비중을 차지하도록 기본 높이를 크게 잡는다 */}
+        <div className="h-[34rem] min-h-64 resize-y overflow-auto rounded-lg">
           <ReviewListPanel
             requirements={analysisResult.requirements}
             policies={analysisResult.policies}
@@ -250,10 +258,10 @@ export default function WorkspacePage() {
         </div>
 
         {/* 하단 시트 연결 */}
-        <div className="h-40 min-h-32 resize-y overflow-auto rounded-xl">
+        <div className="h-32 min-h-28 resize-y overflow-auto rounded-lg">
           <GoogleSheetPanel value={sheet} onChange={setSheet} />
         </div>
-      </div>
+      </main>
 
       {duplicateConfirm && (
         <DuplicateConfirmDialog
