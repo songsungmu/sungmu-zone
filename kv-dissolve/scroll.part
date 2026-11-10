@@ -1,0 +1,21 @@
+/* F: scroll-driven masking */
+.scrolly{position:relative;background:#111}
+.sticky{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden}
+.layer{position:absolute;inset:0;will-change:mask-image,-webkit-mask-image}
+.layer canvas{position:absolute;inset:-4% 0;width:100%;height:108%;display:block;will-change:transform}
+.layer .shade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none}
+.layer .big{position:absolute;left:max(20px,env(safe-area-inset-left,0px));bottom:-0.12em;font-family:var(--f-display);font-weight:600;font-style:italic;font-size:clamp(84px,17vw,260px);line-height:1;letter-spacing:-.02em;white-space:nowrap;opacity:.16;pointer-events:none;will-change:transform}
+.layer .copy{position:absolute;left:max(24px,env(safe-area-inset-left,0px));top:50%;transform:translateY(-50%);max-width:min(520px,calc(100% - 48px));will-change:transform,opacity}
+@media (min-width:1328px){.layer .copy{left:calc((100% - 1280px)/2 + 24px)}}
+.rail{position:absolute;right:max(24px,env(safe-area-inset-right,0px));top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;z-index:5;color:#fff;mix-blend-mode:difference}
+.rail button{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;font-family:var(--f-mono);font-size:11px;opacity:.5;transition:opacity .3s}
+.rail button i{display:block;width:2px;height:28px;background:currentColor;opacity:.35;position:relative;overflow:hidden}
+.rail button i b{position:absolute;inset:0;background:currentColor;transform-origin:top;transform:scaleY(0)}
+.rail button.on{opacity:1}
+.rail button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.hint{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:5;color:#fff;font-size:12px;letter-spacing:.08em;display:flex;flex-direction:column;align-items:center;gap:6px;transition:opacity .4s;mix-blend-mode:difference}
+.hint svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;animation:nud 1.8s ease-in-out infinite}
+@keyframes nud{50%{transform:translateY(5px)}}
+@media (max-width:720px){.layer .copy{top:auto;bottom:22%;transform:none}.rail{top:auto;bottom:24px;transform:none;flex-direction:row}.rail button i{width:24px;height:2px}.rail button i b{transform-origin:left;transform:scaleX(0)}.rail button span{display:none}.hint{left:24px;transform:none;align-items:flex-start}}
+@media (prefers-reduced-motion:reduce){.hint svg{animation:none}}
+.layer .copy > *{transition:none}

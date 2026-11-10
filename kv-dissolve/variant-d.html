@@ -1,4 +1,4 @@
-<title>KV 디졸브 시안 B</title>
+<title>KV 디졸브 시안 D</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -10,7 +10,7 @@
   --f-body:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
   --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
   --gut-l:max(16px,env(safe-area-inset-left,0px)); --gut-r:max(16px,env(safe-area-inset-right,0px));
-  --dur:1800ms;
+  --dur:1300ms;
   color-scheme:light;
 }
 *{box-sizing:border-box}
@@ -21,7 +21,8 @@ body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-siz
 .top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:14px;flex-wrap:wrap}
 .mark{font-family:var(--f-display);font-size:22px;font-weight:600;letter-spacing:.02em}
 .mark small{font-family:var(--f-body);font-size:12px;color:var(--muted);font-weight:400;margin-left:10px;letter-spacing:0}
-.tabs{display:flex;gap:6px}
+.tabs{display:flex;gap:6px;overflow-x:auto;max-width:100%;scrollbar-width:none}
+.tabs a{flex:none}
 .tabs a{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--line);border-radius:999px;color:var(--ink);text-decoration:none;font-size:13px;background:var(--surface)}
 .tabs a:hover{border-color:var(--ink)}
 .tabs a[aria-current="page"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
@@ -52,10 +53,10 @@ body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-siz
 /* copy text transitions — variant specific */
 .copy > *{transition:opacity .28s ease}
 .copy.out > *{opacity:0}
-.copy.in > *,.copy.in h2 .ln{animation:fu var(--td,1080ms) cubic-bezier(.25,.6,.3,1) both}
+.copy.in > *,.copy.in h2 .ln{animation:fu var(--td,910ms) cubic-bezier(.22,.7,.2,1) both}
 .copy.in h2{animation:none}
-.copy.in h2 .ln:nth-child(1){animation-delay:100ms}.copy.in h2 .ln:nth-child(2){animation-delay:200ms}.copy.in .sub{animation-delay:300ms}.copy.in .period{animation-delay:400ms}
-@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.copy.in h2 .ln:nth-child(1){animation-delay:80ms}.copy.in h2 .ln:nth-child(2){animation-delay:160ms}.copy.in .sub{animation-delay:240ms}.copy.in .period{animation-delay:320ms}
+@keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
 @media (max-width:720px){
   .kv{height:auto;aspect-ratio:4/5;max-height:640px;max-width:100%}
@@ -65,6 +66,20 @@ body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-siz
   .ctrl{bottom:24px}
   .bar{width:80px}
 }
+
+/* D: smart dissolve thumbnails */
+.mlayer{position:absolute;inset:0;overflow:hidden;visibility:hidden}
+.mlayer canvas{position:absolute;inset:0;width:100%;height:100%;display:block;transform-origin:50% 50%}
+.thumbs{position:absolute;right:max(24px,env(safe-area-inset-right,0px));bottom:24px;display:flex;gap:10px;z-index:5}
+.thumb{position:relative;width:132px;height:84px;border-radius:8px;overflow:hidden;border:0;padding:0;cursor:pointer;background:#000;box-shadow:0 6px 18px rgba(0,0,0,.22);transition:transform .35s cubic-bezier(.2,.7,.2,1)}
+.thumb:hover{transform:translateY(-3px)}
+.thumb canvas{width:100%;height:100%;display:block}
+.thumb span{position:absolute;left:8px;bottom:6px;font-family:var(--f-mono);font-size:10.5px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.thumb.in{animation:tin .6s cubic-bezier(.2,.7,.2,1) both}
+@keyframes tin{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+.thumbs.dim .thumb:not(.flying){opacity:0;transition:opacity .3s ease}
+.thumb.flying{opacity:0}
+@media (max-width:720px){.thumbs{top:20px;bottom:auto;gap:8px}.thumb{width:64px;height:80px}.thumb:nth-child(3){display:none}}
 
 /* spec panel */
 .spec{padding-block:40px 64px}
@@ -96,11 +111,7 @@ td code{font-family:var(--f-mono);font-size:12px;background:var(--paper);padding
 <header class="top">
   <div class="wrap">
     <div class="mark">KV Dissolve<small>메인 키비주얼 전환 시안</small></div>
-    <nav class="tabs" aria-label="시안 선택">
-      <a href="https://claude.ai/artifact/WaBCzG7zMhkcdw2FB1eT11" >A 크로스페이드</a>
-      <a href="https://claude.ai/artifact/SX93jQdcVYqefZB4RW64xU" aria-current="page">B 클라우드</a>
-      <a href="https://claude.ai/artifact/EYzCZ6JvrraGngqw3NHZuG" >C 라이트 스윕</a>
-    </nav>
+    <nav class="tabs" aria-label="시안 선택"><a href="https://claude.ai/artifact/WaBCzG7zMhkcdw2FB1eT11">A 크로스페이드</a><a href="https://claude.ai/artifact/EYzCZ6JvrraGngqw3NHZuG">C 라이트 스윕</a><a href="https://claude.ai/artifact/UoSKoML6xJTdBgrrCxpbTw" aria-current="page">D 스마트 디졸브</a><a href="https://claude.ai/artifact/9jGKcD7drpMQzD671Wxg7F">E 블러 디졸브</a><a href="https://claude.ai/artifact/5HEt3p9SSHVDctxrQGahhg">F 스크롤 마스킹</a></nav>
   </div>
 </header>
 
@@ -126,17 +137,17 @@ td code{font-family:var(--f-mono);font-size:12px;background:var(--paper);padding
 <section class="spec">
   <div class="wrap spec-grid">
     <div>
-      <div class="tag">Variant B</div>
-      <h1>Cloud Dissolve<span>클라우드 디졸브</span></h1>
-      <p class="lead">크고 부드러운 구름 모양 마스크를 따라 다음 비주얼이 안개처럼 번져 나옵니다. 경계를 넓게 풀어 입자감 없이 매끈하게 섞이며, 다음 비주얼은 아주 살짝 줌아웃합니다.</p>
-      <ol><li><b>구름 마스크</b> 저주파 노이즈 한 겹(fbm × 1.3)만 사용해 덩어리가 크고 경계가 부드러움</li><li><b>0 → 1800ms</b> 마스크 임계값 이동, 페더 폭 0.32로 넓게 블렌딩</li><li><b>0 → 1800ms</b> 다음 비주얼 scale 1.035 → 1.00</li><li><b>630ms~</b> 카피가 8px 아래에서 천천히 페이드업, 줄마다 100ms 간격</li></ol>
+      <div class="tag">Variant D</div>
+      <h1>Smart Dissolve<span>스마트 디졸브</span></h1>
+      <p class="lead">오른쪽 아래 썸네일 카드가 그대로 커지며 다음 키비주얼이 됩니다. 카드의 위치·크기·모서리가 화면 전체로 이어지고, 이전 비주얼은 살짝 뒤로 물러나 어두워집니다. Figma Smart Animate처럼 시선이 끊기지 않습니다.</p>
+      <ol><li><b>공유 요소</b> 썸네일 카드와 다음 KV를 같은 이미지로 연결 (카드 = KV의 center-crop)</li><li><b>0 → 1300ms</b> clip-path inset(카드 영역, r 8px) → inset(0, r 0) 확장</li><li><b>동시에</b> 이미지 scale 카드 비율 → 1, 위치 카드 중심 → 화면 중심</li><li><b>배경</b> 이전 비주얼 scale 1 → 0.97, opacity 1 → 0.55로 뒤로 물러남</li><li><b>종료 후</b> 썸네일 목록이 오른쪽에서 70ms 간격으로 다시 들어옴</li></ol>
     </div>
     <div class="panel">
       <h3>인터랙션 스펙</h3>
-      <table><tbody><tr><td>전환 시간</td><td>1800ms</td></tr><tr><td>이징</td><td>easeInOutSine</td></tr><tr><td>마스크</td><td>fbm(uv × 1.3), soft edge 0.32</td></tr><tr><td>이미지 모션</td><td>scale 1.035 → 1</td></tr><tr><td>카피 등장</td><td>fade-up 8px, 100ms stagger</td></tr><tr><td>구현</td><td>WebGL fragment shader (미지원 시 A로 대체)</td></tr></tbody></table>
+      <table><tbody><tr><td>전환 시간</td><td>1300ms</td></tr><tr><td>이징</td><td><code>cubic-bezier(.55,0,.12,1)</code></td></tr><tr><td>모핑</td><td>clip-path inset + transform (FLIP)</td></tr><tr><td>카피 등장</td><td>fade-up 12px, 80ms stagger</td></tr><tr><td>트리거</td><td>자동 재생, 화살표, 썸네일 클릭</td></tr><tr><td>구현</td><td>Web Animations API, GPU 합성</td></tr></tbody></table>
       <div class="tune">
-        <label for="dur-range">전환 시간 <output id="dur-out">1800ms</output></label>
-        <input type="range" id="dur-range" min="400" max="3200" step="100" value="1800">
+        <label for="dur-range">전환 시간 <output id="dur-out">1300ms</output></label>
+        <input type="range" id="dur-range" min="400" max="3200" step="100" value="1300">
         <div class="btns">
           <button type="button" class="btn" id="replay">다음 전환 재생</button>
           <button type="button" class="btn ghost" id="slow">슬로모션 0.25×</button>
@@ -150,19 +161,14 @@ td code{font-family:var(--f-mono);font-size:12px;background:var(--paper);padding
 <script>
 (function(){
 "use strict";
-var V={"id":"B","dur":1800,"ease":"inOutSine","textAt":0.35,"textDur":0.6};
+var V={"id":"D","dur":1300,"ease":"inOutSine","textAt":0.35,"textDur":0.7};
 var SLIDES=[
- {kind:"arch",  eyebrow:"Holiday Collection", t:["겨울을 밝히는","홀리데이 선물 제안"], sub:"선물하기 좋은 시즌 한정 아이템을 한자리에", period:"2026.11.14 — 12.31", bg:["#141a33","#3b1d3f"], glow:"#e7b765", ink:"#ffffff"},
- {kind:"sphere",eyebrow:"Beauty Week",       t:["뷰티 위크","최대 20% 혜택"], sub:"인기 브랜드 기프트 세트와 단독 구성", period:"2026.11.20 — 11.30", bg:["#f7d9d2","#e98f7e"], glow:"#fff4ee", ink:"#2a1a17"},
- {kind:"rings", eyebrow:"Fine Jewelry & Watch", t:["오래 남을 빛,","파인 주얼리 & 워치"], sub:"하이엔드 브랜드 신규 컬렉션 입고", period:"2026.11.10 — 12.07", bg:["#0f2a24","#1d4a3f"], glow:"#d9c08a", ink:"#ffffff"},
- {kind:"blocks",eyebrow:"Home & Living",      t:["계절이 머무는 집","리빙 페어"], sub:"패브릭·조명·테이블웨어 시즌 제안", period:"2026.11.21 — 12.04", bg:["#e8e2d4","#bcc4ad"], glow:"#fffaf0", ink:"#22251d"},
- {kind:"plates",eyebrow:"Gourmet Market",     t:["연말 식탁을 위한","고메 마켓"], sub:"산지 직송 프리미엄 식재료와 와인", period:"2026.12.01 — 12.24", bg:["#5a2a10","#c46a22"], glow:"#ffd08a", ink:"#ffffff"}
+ {kind:"arch",word:"HOLIDAY",eyebrow:"Holiday Collection", t:["겨울을 밝히는","홀리데이 선물 제안"], sub:"선물하기 좋은 시즌 한정 아이템을 한자리에", period:"2026.11.14 — 12.31", bg:["#141a33","#3b1d3f"], glow:"#e7b765", ink:"#ffffff"},
+ {kind:"sphere",word:"BEAUTY",eyebrow:"Beauty Week",       t:["뷰티 위크","최대 20% 혜택"], sub:"인기 브랜드 기프트 세트와 단독 구성", period:"2026.11.20 — 11.30", bg:["#f7d9d2","#e98f7e"], glow:"#fff4ee", ink:"#2a1a17"},
+ {kind:"rings",word:"JEWELRY",eyebrow:"Fine Jewelry & Watch", t:["오래 남을 빛,","파인 주얼리 & 워치"], sub:"하이엔드 브랜드 신규 컬렉션 입고", period:"2026.11.10 — 12.07", bg:["#0f2a24","#1d4a3f"], glow:"#d9c08a", ink:"#ffffff"},
+ {kind:"blocks",word:"LIVING",eyebrow:"Home & Living",      t:["계절이 머무는 집","리빙 페어"], sub:"패브릭·조명·테이블웨어 시즌 제안", period:"2026.11.21 — 12.04", bg:["#e8e2d4","#bcc4ad"], glow:"#fffaf0", ink:"#22251d"},
+ {kind:"plates",word:"GOURMET",eyebrow:"Gourmet Market",     t:["연말 식탁을 위한","고메 마켓"], sub:"산지 직송 프리미엄 식재료와 와인", period:"2026.12.01 — 12.24", bg:["#5a2a10","#c46a22"], glow:"#ffd08a", ink:"#ffffff"}
 ];
-var N=SLIDES.length, INTERVAL=5000;
-var reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
-var kv=document.getElementById("kv"), stage=document.getElementById("stage");
-var $=function(id){return document.getElementById(id)};
-
 /* ---------- seeded random ---------- */
 function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 var grainTile=(function(){var c=document.createElement("canvas");c.width=c.height=128;var x=c.getContext("2d"),d=x.createImageData(128,128),r=rng(7);for(var i=0;i<d.data.length;i+=4){var v=r()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255}x.putImageData(d,0,0);return c})();
@@ -219,6 +225,12 @@ function drawArt(cv,w,h,s,idx){
   vg.addColorStop(0,rgba(s.bg[0],.75));vg.addColorStop(1,rgba(s.bg[0],0));x.fillStyle=vg;x.fillRect(0,0,w,h);
   x.globalAlpha=.06;x.globalCompositeOperation="overlay";x.fillStyle=x.createPattern(grainTile,"repeat");x.fillRect(0,0,w,h);x.globalAlpha=1;x.globalCompositeOperation="source-over";
 }
+
+
+var N=SLIDES.length, INTERVAL=5000;
+var reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+var kv=document.getElementById("kv"), stage=document.getElementById("stage");
+var $=function(id){return document.getElementById(id)};
 
 /* ---------- easing ---------- */
 var EASE={
@@ -309,10 +321,80 @@ var FRAG={
    "gl_FragColor=vec4(mix(a,b,k),1.);}"
 };
 
+/* ---------- D: smart dissolve (thumbnail card -> full KV) ---------- */
+var pickFn=null;
+function MorphRenderer(){
+  var tok=0,layers=[],strip,anims=[],cur=0,thumbCv={};
+  var EASE_M="cubic-bezier(.55,0,.12,1)";
+  function buildStrip(animate){
+    strip.innerHTML="";strip.classList.remove("dim");
+    for(var k=1;k<=3;k++){(function(idx,k){
+      var b=document.createElement("button");b.type="button";b.className="thumb"+(animate?" in":"");b.dataset.idx=idx;
+      b.setAttribute("aria-label",(idx+1)+"번 비주얼 보기");if(animate)b.style.animationDelay=(k-1)*70+"ms";
+      var c=document.createElement("canvas");b.appendChild(c);var sp=document.createElement("span");sp.textContent=(idx<9?"0":"")+(idx+1);b.appendChild(sp);
+      b.onclick=function(){pickFn&&pickFn(idx)};strip.appendChild(b);paintThumb(c,idx);
+    })((cur+k)%N,k)}
+  }
+  function paintThumb(c,idx){var r=c.parentNode.getBoundingClientRect?null:null;var d=Math.min(window.devicePixelRatio||1,2);
+    var tw=c.clientWidth||132,th=c.clientHeight||84;c.width=Math.round(tw*d);c.height=Math.round(th*d);
+    var src=canvases[idx],k=Math.max(c.width/src.width,c.height/src.height),w=src.width*k,h=src.height*k;
+    c.getContext("2d").drawImage(src,(c.width-w)/2,(c.height-h)/2,w,h)}
+  function finishAll(){tok++;anims.forEach(function(a){try{a.cancel()}catch(e){}});anims=[]}
+  return{
+    init:function(){
+      canvases.forEach(function(c,i){var l=document.createElement("div");l.className="mlayer";l.appendChild(c);stage.appendChild(l);layers.push(l)});
+      layers[0].style.visibility="visible";
+      strip=document.createElement("div");strip.className="thumbs";kv.appendChild(strip);
+    },
+    resize:function(w,h){canvases.forEach(function(c,i){drawArt(c,w,h,SLIDES[i],i)});buildStrip(false)},
+    go:function(from,to,ms,done){
+      finishAll();
+      var kr=kv.getBoundingClientRect(),W=kr.width,H=kr.height;
+      var th=strip.querySelector('.thumb[data-idx="'+to+'"]'),r;
+      if(th&&th.offsetParent){r=th.getBoundingClientRect();th.classList.add("flying")}
+      else{var f=strip.querySelector(".thumb");r=f?f.getBoundingClientRect():{left:kr.right-160,top:kr.bottom-110,width:132,height:84}}
+      strip.classList.add("dim");
+      var x=r.left-kr.left,y=r.top-kr.top,tw=r.width,thh=r.height;
+      var k=Math.max(tw/W,thh/H),dx=x+tw/2-W/2,dy=y+thh/2-H/2;
+      layers.forEach(function(l,i){l.style.zIndex=i===to?3:i===from?2:1;if(i!==to&&i!==from)l.style.visibility="hidden"});
+      var L=layers[to],C=canvases[to],F=layers[from];L.style.visibility="visible";
+      var o={duration:ms,easing:EASE_M,fill:"forwards"};
+      anims.push(L.animate([{clipPath:"inset("+y+"px "+(W-x-tw)+"px "+(H-y-thh)+"px "+x+"px round 8px)"},{clipPath:"inset(0px 0px 0px 0px round 0px)"}],o));
+      anims.push(C.animate([{transform:"translate("+dx+"px,"+dy+"px) scale("+k+")"},{transform:"translate(0px,0px) scale(1)"}],o));
+      anims.push(F.animate([{transform:"scale(1)",opacity:1},{transform:"scale(.97)",opacity:.55}],{duration:ms,easing:EASE_M}));
+      var a0=anims[0],my=++tok;
+      a0.onfinish=function(){if(my!==tok)return;
+        anims.forEach(function(a){try{a.cancel()}catch(e){}});anims=[];
+        layers.forEach(function(l,i){l.style.visibility=i===to?"visible":"hidden"});
+        cur=to;buildStrip(true);done&&done();
+      };
+      cur=to;
+    }
+  };
+}
+
+/* ---------- E: blur dissolve ---------- */
+function BlurRenderer(){
+  var anims=[],tok=0;
+  return{
+    init:function(){canvases.forEach(function(c){c.className="slide";stage.appendChild(c)});canvases[0].style.opacity=1},
+    resize:function(w,h){canvases.forEach(function(c,i){drawArt(c,w,h,SLIDES[i],i)})},
+    go:function(from,to,ms,done){
+      tok++;anims.forEach(function(a){try{a.cancel()}catch(e){}});anims=[];
+      canvases.forEach(function(c,i){c.style.zIndex=i===to?3:i===from?2:1;if(i!==to&&i!==from)c.style.opacity=0});
+      var F=canvases[from],T=canvases[to];F.style.opacity=1;T.style.opacity=0;
+      anims.push(F.animate([{filter:"blur(0px)",transform:"scale(1)"},{filter:"blur(16px)",transform:"scale(1.06)"}],{duration:ms*.8,easing:"cubic-bezier(.4,0,.6,1)",fill:"forwards"}));
+      var a=T.animate([{opacity:0,filter:"blur(20px)",transform:"scale(1.08)"},{opacity:1,filter:"blur(0px)",transform:"scale(1)"}],{duration:ms*.85,delay:ms*.15,easing:"cubic-bezier(.25,.1,.25,1)",fill:"forwards"});
+      anims.push(a);var my=++tok;
+      a.onfinish=function(){if(my!==tok)return;T.style.opacity=1;F.style.opacity=0;anims.forEach(function(x){try{x.cancel()}catch(e){}});anims=[];done&&done()};
+    }
+  };
+}
+
 /* ---------- controller ---------- */
 var cur=0,playing=true,elapsed=0,last=performance.now(),dur=V.dur,slow=1,R;
 makeCanvases();
-try{R=V.id==="A"?CssRenderer():GLRenderer(FRAG[V.id]);R.init()}catch(e){stage.innerHTML="";R=CssRenderer();R.init()}
+try{R=V.id==="A"?CssRenderer():V.id==="D"?MorphRenderer():V.id==="E"?BlurRenderer():GLRenderer(FRAG[V.id]);R.init()}catch(e){stage.innerHTML="";R=CssRenderer();R.init()}
 function layout(){var s=sizeOf();R.resize(s.w,s.h)}
 var rt;window.addEventListener("resize",function(){clearTimeout(rt);rt=setTimeout(layout,120)});
 layout();
@@ -335,6 +417,7 @@ function go(to){
   txtTimer=setTimeout(function(){setText(to);copy.style.setProperty("--td",(ms*V.textDur)+"ms");copy.classList.remove("out");void copy.offsetWidth;copy.classList.add("in")},ms*V.textAt);
   R.go(from,to,ms);
 }
+pickFn=go;
 function next(){go((cur+1)%N)}function prev(){go((cur-1+N)%N)}
 $("next").onclick=next;$("prev").onclick=prev;
 function setPlay(p){playing=p;$("play").setAttribute("aria-label",p?"자동 재생 정지":"자동 재생");
