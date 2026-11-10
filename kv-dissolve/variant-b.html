@@ -1,4 +1,4 @@
-<title>KV 디졸브 시안 F</title>
+<title>KV 디졸브 시안 B</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -10,7 +10,7 @@
   --f-body:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
   --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
   --gut-l:max(16px,env(safe-area-inset-left,0px)); --gut-r:max(16px,env(safe-area-inset-right,0px));
-  --dur:1000ms;
+  --dur:1600ms;
   color-scheme:light;
 }
 *{box-sizing:border-box}
@@ -53,7 +53,9 @@ body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-siz
 /* copy text transitions — variant specific */
 .copy > *{transition:opacity .28s ease}
 .copy.out > *{opacity:0}
-
+.copy.in > *{animation:sl var(--td,1040ms) cubic-bezier(.22,.7,.25,1) both}
+.copy.in h2{animation-delay:90ms}.copy.in .sub{animation-delay:180ms}.copy.in .period{animation-delay:270ms}
+@keyframes sl{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
 
 @media (max-width:720px){
   .kv{height:auto;aspect-ratio:4/5;max-height:640px;max-width:100%}
@@ -63,20 +65,6 @@ body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-siz
   .ctrl{bottom:24px}
   .bar{width:80px}
 }
-
-/* D: smart dissolve thumbnails */
-.mlayer{position:absolute;inset:0;overflow:hidden;visibility:hidden}
-.mlayer canvas{position:absolute;inset:0;width:100%;height:100%;display:block;transform-origin:50% 50%}
-.thumbs{position:absolute;right:max(24px,env(safe-area-inset-right,0px));bottom:24px;display:flex;gap:10px;z-index:5}
-.thumb{position:relative;width:132px;height:84px;border-radius:8px;overflow:hidden;border:0;padding:0;cursor:pointer;background:#000;box-shadow:0 6px 18px rgba(0,0,0,.22);transition:transform .35s cubic-bezier(.2,.7,.2,1)}
-.thumb:hover{transform:translateY(-3px)}
-.thumb canvas{width:100%;height:100%;display:block}
-.thumb span{position:absolute;left:8px;bottom:6px;font-family:var(--f-mono);font-size:10.5px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5)}
-.thumb.in{animation:tin .6s cubic-bezier(.2,.7,.2,1) both}
-@keyframes tin{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
-.thumbs.dim .thumb:not(.flying){opacity:0;transition:opacity .3s ease}
-.thumb.flying{opacity:0}
-@media (max-width:720px){.thumbs{top:20px;bottom:auto;gap:8px}.thumb{width:64px;height:80px}.thumb:nth-child(3){display:none}}
 
 /* spec panel */
 .spec{padding-block:40px 64px}
@@ -103,62 +91,54 @@ td code{font-family:var(--f-mono);font-size:12px;background:var(--paper);padding
 .btn.ghost{background:transparent;color:var(--ink)}
 .note{font-size:12px;color:var(--muted);margin-top:14px}
 @media (prefers-reduced-motion:reduce){.copy *{animation:none!important;transition:none!important}}
-/* F: scroll-driven masking */
-.scrolly{position:relative;background:#111}
-.sticky{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden}
-.layer{position:absolute;inset:0;will-change:mask-image,-webkit-mask-image}
-.layer canvas{position:absolute;inset:-4% 0;width:100%;height:108%;display:block;will-change:transform}
-.layer .shade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none}
-.layer .big{position:absolute;left:max(20px,env(safe-area-inset-left,0px));bottom:-0.12em;font-family:var(--f-display);font-weight:600;font-style:italic;font-size:clamp(84px,17vw,260px);line-height:1;letter-spacing:-.02em;white-space:nowrap;opacity:.16;pointer-events:none;will-change:transform}
-.layer .copy{position:absolute;left:max(24px,env(safe-area-inset-left,0px));top:50%;transform:translateY(-50%);max-width:min(520px,calc(100% - 48px));will-change:transform,opacity}
-@media (min-width:1328px){.layer .copy{left:calc((100% - 1280px)/2 + 24px)}}
-.rail{position:absolute;right:max(24px,env(safe-area-inset-right,0px));top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;z-index:5;color:#fff;mix-blend-mode:difference}
-.rail button{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;font-family:var(--f-mono);font-size:11px;opacity:.5;transition:opacity .3s}
-.rail button i{display:block;width:2px;height:28px;background:currentColor;opacity:.35;position:relative;overflow:hidden}
-.rail button i b{position:absolute;inset:0;background:currentColor;transform-origin:top;transform:scaleY(0)}
-.rail button.on{opacity:1}
-.rail button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-.hint{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:5;color:#fff;font-size:12px;letter-spacing:.08em;display:flex;flex-direction:column;align-items:center;gap:6px;transition:opacity .4s;mix-blend-mode:difference}
-.hint svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;animation:nud 1.8s ease-in-out infinite}
-@keyframes nud{50%{transform:translateY(5px)}}
-@media (max-width:720px){.layer .copy{top:auto;bottom:22%;transform:none}.rail{top:auto;bottom:24px;transform:none;flex-direction:row}.rail button i{width:24px;height:2px}.rail button i b{transform-origin:left;transform:scaleX(0)}.rail button span{display:none}.hint{left:24px;transform:none;align-items:flex-start}}
-@media (prefers-reduced-motion:reduce){.hint svg{animation:none}}
-.layer .copy > *{transition:none}
-
 </style>
+
 <header class="top">
   <div class="wrap">
     <div class="mark">KV Dissolve<small>메인 키비주얼 전환 시안</small></div>
-    <nav class="tabs" aria-label="시안 선택"><a href="https://claude.ai/artifact/WaBCzG7zMhkcdw2FB1eT11">A 크로스페이드</a><a href="https://claude.ai/artifact/EYzCZ6JvrraGngqw3NHZuG">C 라이트 스윕</a><a href="https://claude.ai/artifact/UoSKoML6xJTdBgrrCxpbTw">D 스마트 디졸브</a><a href="https://claude.ai/artifact/9jGKcD7drpMQzD671Wxg7F">E 블러 디졸브</a><a href="https://claude.ai/artifact/5HEt3p9SSHVDctxrQGahhg" aria-current="page">F 스크롤 마스킹</a><a href="https://claude.ai/artifact/VNtfS8xxBaNiPchorNMUi8">G 디스퍼전</a><a href="https://claude.ai/artifact/J7g4bSE4gUXiV7376ZNpeE">H 리퀴드</a></nav>
+    <nav class="tabs" aria-label="시안 선택"><a href="https://claude.ai/artifact/WaBCzG7zMhkcdw2FB1eT11">A 크로스페이드</a><a href="https://claude.ai/artifact/EYzCZ6JvrraGngqw3NHZuG" aria-current="page">B 라이트 스윕</a><a href="https://claude.ai/artifact/9jGKcD7drpMQzD671Wxg7F">C 블러 디졸브</a></nav>
   </div>
 </header>
 
-<section class="scrolly" id="scrolly" aria-label="스크롤 키비주얼">
-  <div class="sticky" id="sticky">
-    <nav class="rail" id="rail" aria-label="비주얼 위치"></nav>
-    <div class="hint" id="hint" aria-hidden="true">SCROLL<svg viewBox="0 0 16 16"><path d="m3 6 5 5 5-5"/></svg></div>
+<section class="kv" id="kv" aria-roledescription="carousel" aria-label="메인 키비주얼">
+  <div class="stage" id="stage"></div>
+  <div class="kv-inner">
+    <div class="copy" id="copy" aria-live="polite">
+      <div class="eyebrow" id="c-eyebrow"></div>
+      <h2 id="c-title"></h2>
+      <p class="sub" id="c-sub"></p>
+      <div class="period" id="c-period"></div>
+    </div>
+  </div>
+  <div class="ctrl">
+    <div class="count" id="count"><b>01</b> / 05</div>
+    <div class="bar"><i id="bar"></i></div>
+    <button type="button" id="prev" aria-label="이전 비주얼"><svg viewBox="0 0 16 16"><path d="M10 3 5 8l5 5"/></svg></button>
+    <button type="button" id="play" aria-label="자동 재생 정지"><svg viewBox="0 0 16 16" class="fill" id="play-ico"><rect x="4" y="3" width="2.6" height="10"/><rect x="9.4" y="3" width="2.6" height="10"/></svg></button>
+    <button type="button" id="next" aria-label="다음 비주얼"><svg viewBox="0 0 16 16"><path d="m6 3 5 5-5 5"/></svg></button>
   </div>
 </section>
 
 <section class="spec">
   <div class="wrap spec-grid">
     <div>
-      <div class="tag">Variant F</div>
-      <h1>Scroll Masking<span>스크롤 마스킹 디졸브</span></h1>
-      <p class="lead">스크롤하는 만큼 다음 비주얼이 아래에서부터 부드러운 그라디언트 마스크로 차오르며 이전 비주얼을 덮습니다. 이미지와 큰 타이포그래피가 서로 다른 속도로 움직여 제품 소개 페이지 같은 몰입감을 줍니다.</p>
-      <ol><li><b>고정 무대</b> KV를 sticky로 고정하고, 비주얼 1장당 스크롤 1.2화면을 배정</li><li><b>마스크</b> linear-gradient(to top) 마스크가 경계 폭 45%로 아래에서 위로 차오름</li><li><b>관성</b> 스크롤 값을 바로 쓰지 않고 매 프레임 8%씩 따라가게 해 멈춘 뒤에도 부드럽게 정착</li><li><b>패럴랙스</b> 이미지 6%, 큰 타이포 14% 거리를 각각 다른 속도로 이동</li><li><b>카피</b> 마스크가 45% 넘게 차오른 뒤 페이드업, 덮이는 쪽은 위로 빠지며 사라짐</li></ol>
+      <div class="tag">Variant B</div>
+      <h1>Light Sweep Dissolve<span>라이트 스윕 디졸브</span></h1>
+      <p class="lead">다음 비주얼이 왼쪽에서 오른쪽으로 비스듬히, 넓고 흐린 경계를 따라 빛이 스치듯 넘어옵니다. 두 비주얼이 서로 반대로 아주 조금 흘러 공간감이 생깁니다.</p>
+      <ol><li><b>사선 마스크</b> 약 20° 기울어진 그라디언트에 낮은 노이즈를 더해 경계가 직선처럼 보이지 않게 함</li><li><b>0 → 1600ms</b> 페더 폭 0.45로 화면 절반 가까이를 걸쳐 부드럽게 섞임</li><li><b>패럴랙스</b> 이전 비주얼은 왼쪽으로 1.2%, 다음 비주얼은 오른쪽 2%에서 제자리로 이동</li><li><b>640ms~</b> 카피가 왼쪽에서 12px 미끄러지며 페이드인</li></ol>
     </div>
     <div class="panel">
       <h3>인터랙션 스펙</h3>
-      <table><tbody><tr><td>트리거</td><td>스크롤 위치 (1.2화면당 1장)</td></tr><tr><td>마스크</td><td>linear-gradient, feather 45%</td></tr><tr><td>보간</td><td>lerp 0.08 / frame + smoothstep</td></tr><tr><td>정지 구간</td><td>구간 앞뒤 12%는 고정</td></tr><tr><td>구현</td><td>sticky + CSS mask-image + rAF</td></tr><tr><td>참고</td><td>실서비스에선 첫 화면 이후 섹션에 배치 권장</td></tr></tbody></table>
+      <table><tbody><tr><td>전환 시간</td><td>1600ms</td></tr><tr><td>이징</td><td>easeInOutCubic</td></tr><tr><td>마스크</td><td>사선 그라디언트(20°) + 노이즈 0.12, soft edge 0.45</td></tr><tr><td>이미지 모션</td><td>from −1.2% / to +2% → 0 (가로)</td></tr><tr><td>카피 등장</td><td>fade + translateX 12px, 90ms stagger</td></tr><tr><td>구현</td><td>WebGL fragment shader (미지원 시 A로 대체)</td></tr></tbody></table>
       <div class="tune">
-        <label for="feather-range">마스크 경계 폭 <output id="feather-out">45%</output></label>
-        <input type="range" id="feather-range" min="10" max="80" step="5" value="45">
-        <label for="smooth-range">스크롤 관성 <output id="smooth-out">0.08</output></label>
-        <input type="range" id="smooth-range" min="0.03" max="1" step="0.01" value="0.08">
-        <div class="btns"><button type="button" class="btn" id="to-top">처음부터 다시 보기</button></div>
+        <label for="dur-range">전환 시간 <output id="dur-out">1600ms</output></label>
+        <input type="range" id="dur-range" min="400" max="3200" step="100" value="1600">
+        <div class="btns">
+          <button type="button" class="btn" id="replay">다음 전환 재생</button>
+          <button type="button" class="btn ghost" id="slow">슬로모션 0.25×</button>
+        </div>
       </div>
-      <p class="note">관성 값이 낮을수록 스크롤을 멈춘 뒤에도 화면이 더 길고 부드럽게 따라옵니다. 비주얼은 코드로 그린 플레이스홀더입니다.</p>
+      <p class="note">비주얼은 전환 효과 검토용으로 코드로 그린 플레이스홀더입니다. 실제 배너 이미지로 교체해도 동일하게 동작합니다.</p>
     </div>
   </div>
 </section>
@@ -166,7 +146,7 @@ td code{font-family:var(--f-mono);font-size:12px;background:var(--paper);padding
 <script>
 (function(){
 "use strict";
-var V={"id":"F","ease":"inOutSine","chars":false};
+var V={"id":"B","r":"gl","dur":1600,"ease":"inOutCubic","textAt":0.4,"textDur":0.65};
 var SLIDES=[
  {kind:"arch",word:"HOLIDAY",eyebrow:"Holiday Collection", t:["겨울을 밝히는","홀리데이 선물 제안"], sub:"선물하기 좋은 시즌 한정 아이템을 한자리에", period:"2026.11.14 — 12.31", bg:["#141a33","#3b1d3f"], glow:"#e7b765", ink:"#ffffff"},
  {kind:"sphere",word:"BEAUTY",eyebrow:"Beauty Week",       t:["뷰티 위크","최대 20% 혜택"], sub:"인기 브랜드 기프트 세트와 단독 구성", period:"2026.11.20 — 11.30", bg:["#f7d9d2","#e98f7e"], glow:"#fff4ee", ink:"#2a1a17"},
@@ -232,68 +212,149 @@ function drawArt(cv,w,h,s,idx){
 }
 
 
-var N=SLIDES.length,SEG=1.2;
+var N=SLIDES.length, INTERVAL=5000;
 var reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+var kv=document.getElementById("kv"), stage=document.getElementById("stage");
 var $=function(id){return document.getElementById(id)};
-var scrolly=$("scrolly"),sticky=$("sticky"),rail=$("rail"),hint=$("hint");
-scrolly.style.height=(100+(N-1)*SEG*100)+"vh";
-var L=[];
-SLIDES.forEach(function(s,i){
-  var el=document.createElement("div");el.className="layer";el.style.zIndex=i+1;el.style.color=s.ink;
-  var cv=document.createElement("canvas");cv.setAttribute("aria-hidden","true");
-  var sh=document.createElement("div");sh.className="shade";
-  var big=document.createElement("div");big.className="big";big.textContent=s.word;big.setAttribute("aria-hidden","true");
-  var cp=document.createElement("div");cp.className="copy";
-  var cin=document.createElement("div");cin.style.cssText="display:flex;flex-direction:column;gap:14px";
-  cin.innerHTML='<div class="eyebrow"></div><h2></h2><p class="sub"></p><div class="period"></div>';
-  cin.children[0].textContent=s.eyebrow;s.t.forEach(function(t){var o=document.createElement("span");o.className="ln";o.textContent=t;cin.children[1].appendChild(o)});
-  cin.children[2].textContent=s.sub;cin.children[3].textContent=s.period;
-  cp.appendChild(cin);el.appendChild(cv);el.appendChild(big);el.appendChild(sh);el.appendChild(cp);sticky.insertBefore(el,rail);
-  L.push({el:el,cv:cv,sh:sh,big:big,cin:cin});
-  var b=document.createElement("button");b.type="button";b.setAttribute("aria-label",(i+1)+"번 비주얼로 이동");
-  b.innerHTML="<i><b></b></i><span>"+(i<9?"0":"")+(i+1)+"</span>";
-  b.onclick=function(){window.scrollTo({top:scrolly.offsetTop+i*SEG*innerHeight+1,behavior:"smooth"})};
-  rail.appendChild(b);L[i].tick=b;
-});
-var H=1;
-function layout(){var r=sticky.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,2);H=r.height;
-  L.forEach(function(l,i){drawArt(l.cv,Math.round(r.width*d),Math.round(r.height*1.08*d),SLIDES[i],i)});dirty=true}
-var rt;window.addEventListener("resize",function(){clearTimeout(rt);rt=setTimeout(layout,120)});
 
-var FEATHER=45,SMOOTH=reduce?1:0.08,cur=0,dirty=true;
-function clamp(x){return x<0?0:x>1?1:x}
-function ss(x){x=clamp(x);return x*x*(3-2*x)}
-function target(){return Math.max(0,Math.min(N-1,(window.scrollY-scrolly.offsetTop)/(SEG*innerHeight)))}
-function eIn(i,c){if(i<=0)return 1;if(i>=N)return 0;return ss((clamp(c-(i-1))-.12)/.76)}
-function render(c){
-  for(var i=0;i<N;i++){
-    var l=L[i],ei=eIn(i,c),eo=i<N-1?eIn(i+1,c):0;
-    if(ei<=0){l.el.style.visibility="hidden";continue}
-    l.el.style.visibility="visible";
-    if(ei>=1){l.el.style.webkitMaskImage=l.el.style.maskImage="none"}
-    else{var a=ei*(100+FEATHER)-FEATHER,b=a+FEATHER;
-      var m="linear-gradient(to top,#000 "+a.toFixed(2)+"%,transparent "+b.toFixed(2)+"%)";
-      l.el.style.webkitMaskImage=m;l.el.style.maskImage=m}
-    l.cv.style.transform="translate3d(0,"+(((1-ei)*.06-eo*.04)*H).toFixed(1)+"px,0)";
-    l.big.style.transform="translate3d(0,"+(((1-ei)*.14-eo*.06)*H).toFixed(1)+"px,0)";
-    l.sh.style.opacity=(eo*.4).toFixed(3);
-    var op=clamp((ei-.45)/.4)*(1-clamp(eo/.45));
-    l.cin.style.opacity=op.toFixed(3);
-    l.cin.style.transform="translate3d(0,"+((1-clamp((ei-.45)/.55))*36-eo*28).toFixed(1)+"px,0)";
-    l.tick.querySelector("b").style.transform=(innerWidth<=720?"scaleX(":"scaleY(")+(i===0?1:ei).toFixed(3)+")";
-    l.tick.classList.toggle("on",ei>.5&&eo<.5);
-  }
-  hint.style.opacity=c<.04?1:0;
+/* ---------- easing ---------- */
+var EASE={
+  inOutSine:function(t){return -(Math.cos(Math.PI*t)-1)/2},
+  inOutCubic:function(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2}
+};
+
+/* ---------- renderers ---------- */
+var canvases=[];
+function makeCanvases(){for(var i=0;i<N;i++){var c=document.createElement("canvas");c.setAttribute("aria-hidden","true");canvases.push(c)}}
+function sizeOf(){var r=kv.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,2);return{w:Math.max(2,Math.round(r.width*d)),h:Math.max(2,Math.round(r.height*d))}}
+
+function CssRenderer(){
+  var timer=0,cur=0;
+  return{
+    init:function(){canvases.forEach(function(c){c.className="slide";stage.appendChild(c)});canvases[0].style.opacity=1;canvases[0].classList.add("kb")},
+    resize:function(w,h){canvases.forEach(function(c,i){drawArt(c,w,h,SLIDES[i],i)})},
+    go:function(from,to,ms,done){
+      clearTimeout(timer);
+      canvases.forEach(function(c,i){c.style.zIndex=(i===from?2:1);if(i!==from&&i!==to){c.style.transition="none";c.style.opacity=0}});
+      var t=canvases[to];t.style.zIndex=3;t.style.transition="none";t.style.opacity=0;t.classList.remove("kb");void t.offsetWidth;
+      t.style.setProperty("--kb",(ms+INTERVAL+600)+"ms");
+      t.style.transition="opacity "+ms+"ms cubic-bezier(.45,0,.25,1)";t.style.opacity=1;t.classList.add("kb");
+      cur=to;timer=setTimeout(function(){canvases.forEach(function(c,i){if(i!==to){c.style.transition="none";c.style.opacity=0;c.classList.remove("kb")}});done&&done()},ms);
+    }
+  };
 }
-var last=performance.now();
-(function loop(now){var dt=Math.min(64,now-last);last=now;var t=target();
-  var k=1-Math.pow(1-SMOOTH,dt/16.67);
-  if(Math.abs(t-cur)>.0004||dirty){cur+=(t-cur)*k;if(Math.abs(t-cur)<.0004)cur=t;render(cur);dirty=false}
-  requestAnimationFrame(loop)})(last);
-layout();render(0);
 
-$("feather-range").oninput=function(){FEATHER=+this.value;$("feather-out").textContent=FEATHER+"%";dirty=true};
-$("smooth-range").oninput=function(){SMOOTH=+this.value;$("smooth-out").textContent=SMOOTH.toFixed(2)};
-$("to-top").onclick=function(){window.scrollTo({top:0,behavior:"smooth"})};
+var VERT="attribute vec2 p;varying vec2 uv;void main(){uv=vec2(p.x*.5+.5,.5-p.y*.5);gl_Position=vec4(p,0.,1.);}";
+var COMMON="precision highp float;varying vec2 uv;uniform sampler2D uFrom,uTo;uniform float uP;uniform vec2 uRes;"+
+ "float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}"+
+ "float vn(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),u.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),u.x),u.y);}"+
+ "float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*vn(p);p*=2.03;a*=.5;}return v;}";
+
+function GLRenderer(fragBody){
+  var cv=document.createElement("canvas"),gl,prog,tex=[],U={},raf=0,state={from:0,to:0,p:1};
+  function sh(t,src){var s=gl.createShader(t);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s}
+  function draw(){
+    gl.viewport(0,0,cv.width,cv.height);
+    gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex[state.from]);
+    gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,tex[state.to]);
+    gl.uniform1f(U.p,state.p);gl.uniform2f(U.res,cv.width,cv.height);
+    gl.drawArrays(gl.TRIANGLES,0,6);
+  }
+  return{
+    init:function(){
+      gl=cv.getContext("webgl",{antialias:false,premultipliedAlpha:false,preserveDrawingBuffer:false});
+      if(!gl)throw new Error("no webgl");
+      prog=gl.createProgram();gl.attachShader(prog,sh(gl.VERTEX_SHADER,VERT));gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,COMMON+fragBody));gl.linkProgram(prog);
+      if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw new Error("link");
+      gl.useProgram(prog);
+      var b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
+      var loc=gl.getAttribLocation(prog,"p");gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+      gl.uniform1i(gl.getUniformLocation(prog,"uFrom"),0);gl.uniform1i(gl.getUniformLocation(prog,"uTo"),1);
+      U.p=gl.getUniformLocation(prog,"uP");U.res=gl.getUniformLocation(prog,"uRes");
+      for(var i=0;i<N;i++){var t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);
+        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);tex.push(t)}
+      cv.setAttribute("aria-hidden","true");stage.appendChild(cv);
+    },
+    resize:function(w,h){cv.width=w;cv.height=h;
+      for(var i=0;i<N;i++){drawArt(canvases[i],w,h,SLIDES[i],i);gl.bindTexture(gl.TEXTURE_2D,tex[i]);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,canvases[i])}
+      draw()},
+    go:function(from,to,ms,done){
+      cancelAnimationFrame(raf);state.from=from;state.to=to;state.p=0;var t0=performance.now(),ease=EASE[V.ease];
+      (function tick(now){var k=Math.min(1,(now-t0)/ms);state.p=ease(k);draw();if(k<1)raf=requestAnimationFrame(tick);else{state.from=to;state.p=1;draw();done&&done()}})(t0);
+    }
+  };
+}
+
+var FRAG={
+ /* 넓은 페더의 사선 스윕 + 미세 패럴랙스 */
+ C:"void main(){vec2 asp=vec2(uRes.x/uRes.y,1.);"+
+   "vec2 dir=normalize(vec2(1.,.35));vec2 q=uv*asp;"+
+   "float span=dot(asp,abs(dir));float g=dot(q,dir)/span;"+
+   "g+=(fbm(q*1.2)-.5)*.12;"+
+   "float f=.45;float x=uP*(1.+2.*f)-f;float k=1.-smoothstep(x-f,x+f,g);"+
+   "vec2 ua=uv-vec2(.012*uP,0.);"+
+   "vec2 ub=uv+vec2(.02*(1.-uP),0.);"+
+   "vec3 a=texture2D(uFrom,ua).rgb,b=texture2D(uTo,ub).rgb;"+
+   "gl_FragColor=vec4(mix(a,b,k),1.);}"
+};
+
+/* ---------- blur dissolve ---------- */
+function BlurRenderer(){
+  var anims=[],tok=0;
+  return{
+    init:function(){canvases.forEach(function(c){c.className="slide";stage.appendChild(c)});canvases[0].style.opacity=1},
+    resize:function(w,h){canvases.forEach(function(c,i){drawArt(c,w,h,SLIDES[i],i)})},
+    go:function(from,to,ms,done){
+      tok++;anims.forEach(function(a){try{a.cancel()}catch(e){}});anims=[];
+      canvases.forEach(function(c,i){c.style.zIndex=i===to?3:i===from?2:1;if(i!==to&&i!==from)c.style.opacity=0});
+      var F=canvases[from],T=canvases[to];F.style.opacity=1;T.style.opacity=0;
+      anims.push(F.animate([{filter:"blur(0px)",transform:"scale(1)"},{filter:"blur(16px)",transform:"scale(1.06)"}],{duration:ms*.8,easing:"cubic-bezier(.4,0,.6,1)",fill:"forwards"}));
+      var a=T.animate([{opacity:0,filter:"blur(20px)",transform:"scale(1.08)"},{opacity:1,filter:"blur(0px)",transform:"scale(1)"}],{duration:ms*.85,delay:ms*.15,easing:"cubic-bezier(.25,.1,.25,1)",fill:"forwards"});
+      anims.push(a);var my=++tok;
+      a.onfinish=function(){if(my!==tok)return;T.style.opacity=1;F.style.opacity=0;anims.forEach(function(x){try{x.cancel()}catch(e){}});anims=[];done&&done()};
+    }
+  };
+}
+
+/* ---------- controller ---------- */
+var cur=0,playing=true,elapsed=0,last=performance.now(),dur=V.dur,slow=1,R;
+makeCanvases();
+try{R=V.r==="css"?CssRenderer():V.r==="blur"?BlurRenderer():GLRenderer(FRAG.C);R.init()}catch(e){stage.innerHTML="";R=CssRenderer();R.init()}
+function layout(){var s=sizeOf();R.resize(s.w,s.h)}
+var rt;window.addEventListener("resize",function(){clearTimeout(rt);rt=setTimeout(layout,120)});
+layout();
+
+var copy=$("copy"),txtTimer=0;
+function pad(n){return(n<10?"0":"")+n}
+function setText(i){var s=SLIDES[i];
+  $("c-eyebrow").textContent=s.eyebrow;
+  $("c-title").innerHTML="";s.t.forEach(function(l){var o=document.createElement("span");o.className="ln";var x=document.createElement("span");x.className="lt";x.textContent=l;o.appendChild(x);$("c-title").appendChild(o)});
+  $("c-sub").textContent=s.sub;$("c-period").textContent=s.period;
+  kv.style.setProperty("--kv-ink",s.ink);
+  $("count").innerHTML="<b>"+pad(i+1)+"</b> / "+pad(N);
+}
+setText(0);
+function go(to){
+  var from=cur;if(to===from)return;cur=to;elapsed=0;
+  var ms=reduce?200:dur*slow;
+  copy.classList.remove("in");copy.classList.add("out");
+  clearTimeout(txtTimer);
+  txtTimer=setTimeout(function(){setText(to);copy.style.setProperty("--td",(ms*V.textDur)+"ms");copy.classList.remove("out");void copy.offsetWidth;copy.classList.add("in")},ms*V.textAt);
+  R.go(from,to,ms);
+}
+function next(){go((cur+1)%N)}function prev(){go((cur-1+N)%N)}
+$("next").onclick=next;$("prev").onclick=prev;
+function setPlay(p){playing=p;$("play").setAttribute("aria-label",p?"자동 재생 정지":"자동 재생");
+  $("play-ico").innerHTML=p?'<rect x="4" y="3" width="2.6" height="10"/><rect x="9.4" y="3" width="2.6" height="10"/>':'<path d="M4.5 2.8v10.4L13 8z"/>'}
+$("play").onclick=function(){setPlay(!playing)};
+document.addEventListener("keydown",function(e){if(e.target.tagName==="INPUT")return;if(e.key==="ArrowRight")next();if(e.key==="ArrowLeft")prev()});
+var sx=null;kv.addEventListener("pointerdown",function(e){sx=e.clientX});kv.addEventListener("pointerup",function(e){if(sx===null)return;var dx=e.clientX-sx;sx=null;if(Math.abs(dx)>40)(dx<0?next:prev)()});
+var bar=$("bar");
+(function loop(now){var dt=now-last;last=now;if(playing&&!document.hidden){elapsed+=dt;if(elapsed>=INTERVAL*slow)next()}bar.style.transform="scaleX("+Math.min(1,elapsed/(INTERVAL*slow))+")";requestAnimationFrame(loop)})(last);
+
+var range=$("dur-range");range.oninput=function(){dur=+range.value;$("dur-out").textContent=dur+"ms";document.documentElement.style.setProperty("--dur",dur+"ms")};
+$("replay").onclick=next;
+$("slow").onclick=function(){slow=slow===1?4:1;this.textContent=slow===1?"슬로모션 0.25×":"기본 속도로";this.classList.toggle("ghost",slow===1)};
 })();
 </script>

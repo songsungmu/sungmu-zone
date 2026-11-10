@@ -69,20 +69,6 @@ body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-siz
   .bar{width:80px}
 }
 
-/* D: smart dissolve thumbnails */
-.mlayer{position:absolute;inset:0;overflow:hidden;visibility:hidden}
-.mlayer canvas{position:absolute;inset:0;width:100%;height:100%;display:block;transform-origin:50% 50%}
-.thumbs{position:absolute;right:max(24px,env(safe-area-inset-right,0px));bottom:24px;display:flex;gap:10px;z-index:5}
-.thumb{position:relative;width:132px;height:84px;border-radius:8px;overflow:hidden;border:0;padding:0;cursor:pointer;background:#000;box-shadow:0 6px 18px rgba(0,0,0,.22);transition:transform .35s cubic-bezier(.2,.7,.2,1)}
-.thumb:hover{transform:translateY(-3px)}
-.thumb canvas{width:100%;height:100%;display:block}
-.thumb span{position:absolute;left:8px;bottom:6px;font-family:var(--f-mono);font-size:10.5px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5)}
-.thumb.in{animation:tin .6s cubic-bezier(.2,.7,.2,1) both}
-@keyframes tin{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
-.thumbs.dim .thumb:not(.flying){opacity:0;transition:opacity .3s ease}
-.thumb.flying{opacity:0}
-@media (max-width:720px){.thumbs{top:20px;bottom:auto;gap:8px}.thumb{width:64px;height:80px}.thumb:nth-child(3){display:none}}
-
 /* spec panel */
 .spec{padding-block:40px 64px}
 .spec-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px;align-items:start}
@@ -113,7 +99,7 @@ td code{font-family:var(--f-mono);font-size:12px;background:var(--paper);padding
 <header class="top">
   <div class="wrap">
     <div class="mark">KV Dissolve<small>메인 키비주얼 전환 시안</small></div>
-    <nav class="tabs" aria-label="시안 선택"><a href="https://claude.ai/artifact/WaBCzG7zMhkcdw2FB1eT11" aria-current="page">A 크로스페이드</a><a href="https://claude.ai/artifact/EYzCZ6JvrraGngqw3NHZuG">C 라이트 스윕</a><a href="https://claude.ai/artifact/UoSKoML6xJTdBgrrCxpbTw">D 스마트 디졸브</a><a href="https://claude.ai/artifact/9jGKcD7drpMQzD671Wxg7F">E 블러 디졸브</a><a href="https://claude.ai/artifact/5HEt3p9SSHVDctxrQGahhg">F 스크롤 마스킹</a><a href="https://claude.ai/artifact/VNtfS8xxBaNiPchorNMUi8">G 디스퍼전</a><a href="https://claude.ai/artifact/J7g4bSE4gUXiV7376ZNpeE">H 리퀴드</a></nav>
+    <nav class="tabs" aria-label="시안 선택"><a href="https://claude.ai/artifact/WaBCzG7zMhkcdw2FB1eT11" aria-current="page">A 크로스페이드</a><a href="https://claude.ai/artifact/EYzCZ6JvrraGngqw3NHZuG">B 라이트 스윕</a><a href="https://claude.ai/artifact/9jGKcD7drpMQzD671Wxg7F">C 블러 디졸브</a></nav>
   </div>
 </header>
 
@@ -163,7 +149,7 @@ td code{font-family:var(--f-mono);font-size:12px;background:var(--paper);padding
 <script>
 (function(){
 "use strict";
-var V={"id":"A","dur":1200,"ease":"inOutSine","textAt":0.4,"textDur":0.7,"chars":false};
+var V={"id":"A","r":"css","dur":1200,"ease":"inOutSine","textAt":0.4,"textDur":0.7};
 var SLIDES=[
  {kind:"arch",word:"HOLIDAY",eyebrow:"Holiday Collection", t:["겨울을 밝히는","홀리데이 선물 제안"], sub:"선물하기 좋은 시즌 한정 아이템을 한자리에", period:"2026.11.14 — 12.31", bg:["#141a33","#3b1d3f"], glow:"#e7b765", ink:"#ffffff"},
  {kind:"sphere",word:"BEAUTY",eyebrow:"Beauty Week",       t:["뷰티 위크","최대 20% 혜택"], sub:"인기 브랜드 기프트 세트와 단독 구성", period:"2026.11.20 — 11.30", bg:["#f7d9d2","#e98f7e"], glow:"#fff4ee", ink:"#2a1a17"},
@@ -304,40 +290,7 @@ function GLRenderer(fragBody){
 }
 
 var FRAG={
- /* G: 입자로 흩어지고 모이는 디스퍼전 */
- G:"void main(){vec2 asp=vec2(uRes.x/uRes.y,1.);vec2 cell=floor(uv*uRes/1.5);"+
-   "float n=fbm(uv*asp*2.4);n=clamp((n-.2)/.6,0.,1.);"+
-   "float g=hash(cell),g2=hash(cell+17.3),g3=hash(cell+41.7);"+
-   "float d=n*.72+g*.28;"+
-   "vec2 wind=vec2(1.,-.38);vec2 jit=vec2(hash(cell+3.1),hash(cell+8.9))-.5;"+
-   "float lo=clamp((uP-d*.55)/.45,0.,1.);float lo2=lo*lo;"+
-   "vec3 a=texture2D(uFrom,uv-wind*lo2*.16-jit*lo2*.06).rgb;"+
-   "float pa=(1.-smoothstep(0.,1.,lo))*smoothstep(lo-.2,lo+.02,g2);"+
-   "float li=clamp((uP*1.3-.3-d*.5)/.5,0.,1.);float ri=1.-li;"+
-   "vec3 b=texture2D(uTo,uv+wind*ri*ri*.1+jit*ri*ri*.05).rgb;"+
-   "float pb=smoothstep(0.,1.,clamp(li*1.3-g3*.3,0.,1.));"+
-   "vec3 gap=mix(texture2D(uFrom,uv).rgb,texture2D(uTo,uv).rgb,smoothstep(.15,.85,uP))*.72;"+
-   "vec3 c=mix(gap,a+lo*.18,pa);c=mix(c,b,pb);"+
-   "gl_FragColor=vec4(c,1.);}",
- /* H: 도메인 워핑 유체 + 리퀴드 글래스 굴절 */
- H:"void main(){vec2 asp=vec2(uRes.x/uRes.y,1.);vec2 q=uv*asp;float t=uP;"+
-   "vec2 w=vec2(fbm(q*1.4+vec2(0.,t*1.1)),fbm(q*1.4+vec2(5.2,1.3-t*1.1)));"+
-   "float n=fbm(q*1.1+w*2.2);n=clamp((n-.22)/.56,0.,1.);"+
-   "float s=.2;float x=uP*(1.+2.*s)-s;float m=smoothstep(x-s,x+s,n);"+
-   "float e=1.-abs(m*2.-1.);float sw=sin(3.14159*uP);"+
-   "vec2 flow=(w-.5)*.09*sw;vec2 refr=(w-.5)*.06*e;"+
-   "vec3 a=texture2D(uFrom,uv+flow+refr).rgb;"+
-   "vec3 b=texture2D(uTo,(uv-.5)/mix(1.05,1.,uP)+.5-flow*.6-refr).rgb;"+
-   "vec3 c=mix(b,a,m);c+=pow(e,3.)*.13*sw;"+
-   "gl_FragColor=vec4(c,1.);}",
- /* B: 넓고 부드러운 구름형 마스크 — 입자·글로우 없음 */
- B:"void main(){vec2 asp=vec2(uRes.x/uRes.y,1.);"+
-   "float n=fbm(uv*asp*1.3+3.1);n=clamp((n-.22)/.56,0.,1.);"+
-   "float s=.32;float x=uP*(1.+2.*s)-s;float m=smoothstep(x-s,x+s,n);"+
-   "vec2 ub=(uv-.5)/mix(1.035,1.,uP)+.5;"+
-   "vec3 a=texture2D(uFrom,uv).rgb,b=texture2D(uTo,ub).rgb;"+
-   "gl_FragColor=vec4(mix(b,a,m),1.);}",
- /* C: 넓은 페더의 사선 스윕 + 미세 패럴랙스 */
+ /* 넓은 페더의 사선 스윕 + 미세 패럴랙스 */
  C:"void main(){vec2 asp=vec2(uRes.x/uRes.y,1.);"+
    "vec2 dir=normalize(vec2(1.,.35));vec2 q=uv*asp;"+
    "float span=dot(asp,abs(dir));float g=dot(q,dir)/span;"+
@@ -349,59 +302,7 @@ var FRAG={
    "gl_FragColor=vec4(mix(a,b,k),1.);}"
 };
 
-/* ---------- D: smart dissolve (thumbnail card -> full KV) ---------- */
-var pickFn=null;
-function MorphRenderer(){
-  var tok=0,layers=[],strip,anims=[],cur=0,thumbCv={};
-  var EASE_M="cubic-bezier(.55,0,.12,1)";
-  function buildStrip(animate){
-    strip.innerHTML="";strip.classList.remove("dim");
-    for(var k=1;k<=3;k++){(function(idx,k){
-      var b=document.createElement("button");b.type="button";b.className="thumb"+(animate?" in":"");b.dataset.idx=idx;
-      b.setAttribute("aria-label",(idx+1)+"번 비주얼 보기");if(animate)b.style.animationDelay=(k-1)*70+"ms";
-      var c=document.createElement("canvas");b.appendChild(c);var sp=document.createElement("span");sp.textContent=(idx<9?"0":"")+(idx+1);b.appendChild(sp);
-      b.onclick=function(){pickFn&&pickFn(idx)};strip.appendChild(b);paintThumb(c,idx);
-    })((cur+k)%N,k)}
-  }
-  function paintThumb(c,idx){var r=c.parentNode.getBoundingClientRect?null:null;var d=Math.min(window.devicePixelRatio||1,2);
-    var tw=c.clientWidth||132,th=c.clientHeight||84;c.width=Math.round(tw*d);c.height=Math.round(th*d);
-    var src=canvases[idx],k=Math.max(c.width/src.width,c.height/src.height),w=src.width*k,h=src.height*k;
-    c.getContext("2d").drawImage(src,(c.width-w)/2,(c.height-h)/2,w,h)}
-  function finishAll(){tok++;anims.forEach(function(a){try{a.cancel()}catch(e){}});anims=[]}
-  return{
-    init:function(){
-      canvases.forEach(function(c,i){var l=document.createElement("div");l.className="mlayer";l.appendChild(c);stage.appendChild(l);layers.push(l)});
-      layers[0].style.visibility="visible";
-      strip=document.createElement("div");strip.className="thumbs";kv.appendChild(strip);
-    },
-    resize:function(w,h){canvases.forEach(function(c,i){drawArt(c,w,h,SLIDES[i],i)});buildStrip(false)},
-    go:function(from,to,ms,done){
-      finishAll();
-      var kr=kv.getBoundingClientRect(),W=kr.width,H=kr.height;
-      var th=strip.querySelector('.thumb[data-idx="'+to+'"]'),r;
-      if(th&&th.offsetParent){r=th.getBoundingClientRect();th.classList.add("flying")}
-      else{var f=strip.querySelector(".thumb");r=f?f.getBoundingClientRect():{left:kr.right-160,top:kr.bottom-110,width:132,height:84}}
-      strip.classList.add("dim");
-      var x=r.left-kr.left,y=r.top-kr.top,tw=r.width,thh=r.height;
-      var k=Math.max(tw/W,thh/H),dx=x+tw/2-W/2,dy=y+thh/2-H/2;
-      layers.forEach(function(l,i){l.style.zIndex=i===to?3:i===from?2:1;if(i!==to&&i!==from)l.style.visibility="hidden"});
-      var L=layers[to],C=canvases[to],F=layers[from];L.style.visibility="visible";
-      var o={duration:ms,easing:EASE_M,fill:"forwards"};
-      anims.push(L.animate([{clipPath:"inset("+y+"px "+(W-x-tw)+"px "+(H-y-thh)+"px "+x+"px round 8px)"},{clipPath:"inset(0px 0px 0px 0px round 0px)"}],o));
-      anims.push(C.animate([{transform:"translate("+dx+"px,"+dy+"px) scale("+k+")"},{transform:"translate(0px,0px) scale(1)"}],o));
-      anims.push(F.animate([{transform:"scale(1)",opacity:1},{transform:"scale(.97)",opacity:.55}],{duration:ms,easing:EASE_M}));
-      var a0=anims[0],my=++tok;
-      a0.onfinish=function(){if(my!==tok)return;
-        anims.forEach(function(a){try{a.cancel()}catch(e){}});anims=[];
-        layers.forEach(function(l,i){l.style.visibility=i===to?"visible":"hidden"});
-        cur=to;buildStrip(true);done&&done();
-      };
-      cur=to;
-    }
-  };
-}
-
-/* ---------- E: blur dissolve ---------- */
+/* ---------- blur dissolve ---------- */
 function BlurRenderer(){
   var anims=[],tok=0;
   return{
@@ -422,7 +323,7 @@ function BlurRenderer(){
 /* ---------- controller ---------- */
 var cur=0,playing=true,elapsed=0,last=performance.now(),dur=V.dur,slow=1,R;
 makeCanvases();
-try{R=V.id==="A"?CssRenderer():V.id==="D"?MorphRenderer():V.id==="E"?BlurRenderer():GLRenderer(FRAG[V.id]);R.init()}catch(e){stage.innerHTML="";R=CssRenderer();R.init()}
+try{R=V.r==="css"?CssRenderer():V.r==="blur"?BlurRenderer():GLRenderer(FRAG.C);R.init()}catch(e){stage.innerHTML="";R=CssRenderer();R.init()}
 function layout(){var s=sizeOf();R.resize(s.w,s.h)}
 var rt;window.addEventListener("resize",function(){clearTimeout(rt);rt=setTimeout(layout,120)});
 layout();
@@ -431,7 +332,7 @@ var copy=$("copy"),txtTimer=0;
 function pad(n){return(n<10?"0":"")+n}
 function setText(i){var s=SLIDES[i];
   $("c-eyebrow").textContent=s.eyebrow;
-  $("c-title").innerHTML="";s.t.forEach(function(l){var o=document.createElement("span");o.className="ln";var x=document.createElement("span");x.className="lt";if(V.chars){Array.from(l).forEach(function(ch){var c=document.createElement("span");c.className="ch";c.textContent=ch;c.style.setProperty("--cd",Math.round(Math.random()*360)+"ms");c.style.setProperty("--cx",Math.round((Math.random()-.3)*24)+"px");c.style.setProperty("--cy",Math.round((Math.random()-.5)*16)+"px");x.appendChild(c)})}else x.textContent=l;o.appendChild(x);$("c-title").appendChild(o)});
+  $("c-title").innerHTML="";s.t.forEach(function(l){var o=document.createElement("span");o.className="ln";var x=document.createElement("span");x.className="lt";x.textContent=l;o.appendChild(x);$("c-title").appendChild(o)});
   $("c-sub").textContent=s.sub;$("c-period").textContent=s.period;
   kv.style.setProperty("--kv-ink",s.ink);
   $("count").innerHTML="<b>"+pad(i+1)+"</b> / "+pad(N);
@@ -445,7 +346,6 @@ function go(to){
   txtTimer=setTimeout(function(){setText(to);copy.style.setProperty("--td",(ms*V.textDur)+"ms");copy.classList.remove("out");void copy.offsetWidth;copy.classList.add("in")},ms*V.textAt);
   R.go(from,to,ms);
 }
-pickFn=go;
 function next(){go((cur+1)%N)}function prev(){go((cur-1+N)%N)}
 $("next").onclick=next;$("prev").onclick=prev;
 function setPlay(p){playing=p;$("play").setAttribute("aria-label",p?"자동 재생 정지":"자동 재생");
