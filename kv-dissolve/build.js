@@ -5,7 +5,7 @@ const links=JSON.parse(fs.readFileSync(path.join(__dirname,'links.json'),'utf8')
 // scroll variant: template's <style> (+scroll css) + scroll body
 const styleEnd=tpl.indexOf('</style>');
 const scrollTpl=tpl.slice(0,styleEnd)+fs.readFileSync(path.join(__dirname,'scroll.part'),'utf8')+'\n</style>\n'+fs.readFileSync(path.join(__dirname,'scroll-body.part'),'utf8');
-const TABS=[['A','A 크로스페이드'],['C','C 라이트 스윕'],['D','D 스마트 디졸브'],['E','E 블러 디졸브'],['F','F 스크롤 마스킹']];
+const TABS=[['A','A 크로스페이드'],['C','C 라이트 스윕'],['D','D 스마트 디졸브'],['E','E 블러 디졸브'],['F','F 스크롤 마스킹'],['G','G 디스퍼전'],['H','H 리퀴드']];
 const V={
 A:{dur:1200,ease:'inOutSine',textAt:.4,textDur:.7,en:'Soft Crossfade',ko:'소프트 크로스페이드',
  lead:'새 비주얼이 이전 비주얼 위로 겹쳐지며 서서히 떠오르고, 동시에 아주 느리게 줌아웃합니다. 브랜드 톤을 해치지 않는 가장 정석적인 디졸브입니다.',
@@ -42,7 +42,23 @@ E:{dur:1500,ease:'',textAt:.4,textDur:.7,en:'Blur Dissolve',ko:'블러 디졸브
 F:{scroll:true,en:'Scroll Masking',ko:'스크롤 마스킹 디졸브',
  lead:'스크롤하는 만큼 다음 비주얼이 아래에서부터 부드러운 그라디언트 마스크로 차오르며 이전 비주얼을 덮습니다. 이미지와 큰 타이포그래피가 서로 다른 속도로 움직여 제품 소개 페이지 같은 몰입감을 줍니다.',
  steps:['<b>고정 무대</b> KV를 sticky로 고정하고, 비주얼 1장당 스크롤 1.2화면을 배정','<b>마스크</b> linear-gradient(to top) 마스크가 경계 폭 45%로 아래에서 위로 차오름','<b>관성</b> 스크롤 값을 바로 쓰지 않고 매 프레임 8%씩 따라가게 해 멈춘 뒤에도 부드럽게 정착','<b>패럴랙스</b> 이미지 6%, 큰 타이포 14% 거리를 각각 다른 속도로 이동','<b>카피</b> 마스크가 45% 넘게 차오른 뒤 페이드업, 덮이는 쪽은 위로 빠지며 사라짐'],
- rows:[['트리거','스크롤 위치 (1.2화면당 1장)'],['마스크','linear-gradient, feather 45%'],['보간','lerp 0.08 / frame + smoothstep'],['정지 구간','구간 앞뒤 12%는 고정'],['구현','sticky + CSS mask-image + rAF'],['참고','실서비스에선 첫 화면 이후 섹션에 배치 권장']]}
+ rows:[['트리거','스크롤 위치 (1.2화면당 1장)'],['마스크','linear-gradient, feather 45%'],['보간','lerp 0.08 / frame + smoothstep'],['정지 구간','구간 앞뒤 12%는 고정'],['구현','sticky + CSS mask-image + rAF'],['참고','실서비스에선 첫 화면 이후 섹션에 배치 권장']]},
+G:{dur:2000,ease:'inOutSine',chars:true,textAt:.45,textDur:.6,en:'Noise & Dispersion',ko:'노이즈 & 디스퍼전 디졸브',
+ lead:'이전 비주얼이 모래알 같은 입자로 부서져 바람에 날리듯 흩어지고, 반대편에서 날아온 입자들이 모여 다음 비주얼을 이룹니다. 카피도 글자 단위로 흩어진 자리에서 모여듭니다.',
+ steps:['<b>입자 단위</b> 1.5px 셀마다 고유 난수를 부여해 모래·먼지 같은 입자로 분해','<b>흩어지는 순서</b> 큰 노이즈 덩어리 72% + 입자 난수 28%로 사라지는 순서를 결정','<b>0 → 2000ms</b> 이전 입자는 오른쪽 위로 바람처럼 밀려나며 빛나다 사라지고, 다음 입자는 반대 방향에서 모여듦','<b>빈 공간</b> 두 비주얼을 72% 밝기로 섞어 채워 중간에 검게 뚫리지 않음','<b>900ms~</b> 타이틀 글자마다 임의의 위치·지연(0~360ms)에서 모여 선명해짐'],
+ rows:[['전환 시간','2000ms'],['이징','easeInOutSine'],['입자','1.5px 셀 · 바람 벡터 (1, −0.38) · 산란 6%'],['순서 맵','fbm(uv × 2.4) 72% + hash 28%'],['카피 등장','글자별 blur 6px · 위치 흩어짐 → 0'],['구현','WebGL fragment shader (미지원 시 A로 대체)']],
+ css:`.copy.in .ch{display:inline-block;white-space:pre;animation:pd var(--td,1200ms) cubic-bezier(.2,.7,.2,1) both;animation-delay:var(--cd,0ms)}
+.copy.in .eyebrow,.copy.in .sub,.copy.in .period{animation:fd var(--td,1200ms) ease both}
+.copy.in .sub{animation-delay:260ms}.copy.in .period{animation-delay:360ms}
+@keyframes pd{from{opacity:0;filter:blur(6px);transform:translate(var(--cx),var(--cy))}to{opacity:1;filter:blur(0);transform:none}}
+@keyframes fd{from{opacity:0}to{opacity:1}}`},
+H:{dur:1900,ease:'inOutSine',textAt:.4,textDur:.7,en:'Liquid & Morphing',ko:'리퀴드 & 모핑 디졸브',
+ lead:'두 비주얼 사이에 액체가 흐르듯 경계가 일렁이며 번지고, 경계 부분은 유리처럼 빛을 굴절시킵니다. 형태가 전혀 다른 두 화면이 녹아들 듯 이어집니다.',
+ steps:['<b>유체 흐름</b> 시간에 따라 움직이는 노이즈로 노이즈를 다시 비트는 도메인 워핑','<b>0 → 1900ms</b> 일렁이는 마스크를 따라 다음 비주얼이 번져 들어옴 (경계 폭 0.2)','<b>리퀴드 글래스</b> 경계에서만 이미지가 굴절(최대 6%)되고 옅은 하이라이트가 생김','<b>흐름 강도</b> sin(π·t)로 중간에 가장 크게 출렁이고 시작·끝은 고요함','<b>760ms~</b> 카피가 흐린 상태로 떠올라 선명해짐'],
+ rows:[['전환 시간','1900ms'],['이징','easeInOutSine'],['유체','domain-warped fbm, flow 최대 9%'],['굴절','경계 기준 6% offset + specular 13%'],['카피 등장','fade-up 14px + blur 4px → 0'],['구현','WebGL fragment shader (미지원 시 A로 대체)']],
+ css:`.copy.in > *{animation:lq var(--td,1330ms) cubic-bezier(.22,.7,.2,1) both}
+.copy.in h2{animation-delay:100ms}.copy.in .sub{animation-delay:200ms}.copy.in .period{animation-delay:300ms}
+@keyframes lq{from{opacity:0;filter:blur(4px);transform:translateY(14px)}to{opacity:1;filter:blur(0);transform:none}}`}
 };
 for(const id of Object.keys(V)){const v=V[id];
  const tabs=TABS.map(([k,l])=>'<a href="'+(links[k]||'#')+'"'+(k===id?' aria-current="page"':'')+'>'+l+'</a>').join('');
@@ -51,5 +67,5 @@ for(const id of Object.keys(V)){const v=V[id];
  .split('{{NAME_EN}}').join(v.en).split('{{NAME_KO}}').join(v.ko).split('{{LEAD}}').join(v.lead)
  .split('{{STEPS}}').join(v.steps.map(s=>'<li>'+s+'</li>').join(''))
  .split('{{SPEC_ROWS}}').join(v.rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join(''))
- .split('{{VCONF}}').join(JSON.stringify({id,dur:v.dur,ease:v.ease||'inOutSine',textAt:v.textAt,textDur:v.textDur}));
+ .split('{{VCONF}}').join(JSON.stringify({id,dur:v.dur,ease:v.ease||'inOutSine',textAt:v.textAt,textDur:v.textDur,chars:!!v.chars}));
  fs.writeFileSync(path.join(__dirname,'variant-'+id.toLowerCase()+'.html'),out);}

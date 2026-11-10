@@ -110,7 +110,7 @@ td code{font-family:var(--f-mono);font-size:12px;background:var(--paper);padding
 <header class="top">
   <div class="wrap">
     <div class="mark">KV Dissolve<small>메인 키비주얼 전환 시안</small></div>
-    <nav class="tabs" aria-label="시안 선택"><a href="https://claude.ai/artifact/WaBCzG7zMhkcdw2FB1eT11">A 크로스페이드</a><a href="https://claude.ai/artifact/EYzCZ6JvrraGngqw3NHZuG">C 라이트 스윕</a><a href="https://claude.ai/artifact/UoSKoML6xJTdBgrrCxpbTw">D 스마트 디졸브</a><a href="https://claude.ai/artifact/9jGKcD7drpMQzD671Wxg7F" aria-current="page">E 블러 디졸브</a><a href="https://claude.ai/artifact/5HEt3p9SSHVDctxrQGahhg">F 스크롤 마스킹</a></nav>
+    <nav class="tabs" aria-label="시안 선택"><a href="https://claude.ai/artifact/WaBCzG7zMhkcdw2FB1eT11">A 크로스페이드</a><a href="https://claude.ai/artifact/EYzCZ6JvrraGngqw3NHZuG">C 라이트 스윕</a><a href="https://claude.ai/artifact/UoSKoML6xJTdBgrrCxpbTw">D 스마트 디졸브</a><a href="https://claude.ai/artifact/9jGKcD7drpMQzD671Wxg7F" aria-current="page">E 블러 디졸브</a><a href="https://claude.ai/artifact/5HEt3p9SSHVDctxrQGahhg">F 스크롤 마스킹</a><a href="https://claude.ai/artifact/VNtfS8xxBaNiPchorNMUi8">G 디스퍼전</a><a href="https://claude.ai/artifact/J7g4bSE4gUXiV7376ZNpeE">H 리퀴드</a></nav>
   </div>
 </header>
 
@@ -160,7 +160,7 @@ td code{font-family:var(--f-mono);font-size:12px;background:var(--paper);padding
 <script>
 (function(){
 "use strict";
-var V={"id":"E","dur":1500,"ease":"inOutSine","textAt":0.4,"textDur":0.7};
+var V={"id":"E","dur":1500,"ease":"inOutSine","textAt":0.4,"textDur":0.7,"chars":false};
 var SLIDES=[
  {kind:"arch",word:"HOLIDAY",eyebrow:"Holiday Collection", t:["겨울을 밝히는","홀리데이 선물 제안"], sub:"선물하기 좋은 시즌 한정 아이템을 한자리에", period:"2026.11.14 — 12.31", bg:["#141a33","#3b1d3f"], glow:"#e7b765", ink:"#ffffff"},
  {kind:"sphere",word:"BEAUTY",eyebrow:"Beauty Week",       t:["뷰티 위크","최대 20% 혜택"], sub:"인기 브랜드 기프트 세트와 단독 구성", period:"2026.11.20 — 11.30", bg:["#f7d9d2","#e98f7e"], glow:"#fff4ee", ink:"#2a1a17"},
@@ -301,6 +301,32 @@ function GLRenderer(fragBody){
 }
 
 var FRAG={
+ /* G: 입자로 흩어지고 모이는 디스퍼전 */
+ G:"void main(){vec2 asp=vec2(uRes.x/uRes.y,1.);vec2 cell=floor(uv*uRes/1.5);"+
+   "float n=fbm(uv*asp*2.4);n=clamp((n-.2)/.6,0.,1.);"+
+   "float g=hash(cell),g2=hash(cell+17.3),g3=hash(cell+41.7);"+
+   "float d=n*.72+g*.28;"+
+   "vec2 wind=vec2(1.,-.38);vec2 jit=vec2(hash(cell+3.1),hash(cell+8.9))-.5;"+
+   "float lo=clamp((uP-d*.55)/.45,0.,1.);float lo2=lo*lo;"+
+   "vec3 a=texture2D(uFrom,uv-wind*lo2*.16-jit*lo2*.06).rgb;"+
+   "float pa=(1.-smoothstep(0.,1.,lo))*smoothstep(lo-.2,lo+.02,g2);"+
+   "float li=clamp((uP*1.3-.3-d*.5)/.5,0.,1.);float ri=1.-li;"+
+   "vec3 b=texture2D(uTo,uv+wind*ri*ri*.1+jit*ri*ri*.05).rgb;"+
+   "float pb=smoothstep(0.,1.,clamp(li*1.3-g3*.3,0.,1.));"+
+   "vec3 gap=mix(texture2D(uFrom,uv).rgb,texture2D(uTo,uv).rgb,smoothstep(.15,.85,uP))*.72;"+
+   "vec3 c=mix(gap,a+lo*.18,pa);c=mix(c,b,pb);"+
+   "gl_FragColor=vec4(c,1.);}",
+ /* H: 도메인 워핑 유체 + 리퀴드 글래스 굴절 */
+ H:"void main(){vec2 asp=vec2(uRes.x/uRes.y,1.);vec2 q=uv*asp;float t=uP;"+
+   "vec2 w=vec2(fbm(q*1.4+vec2(0.,t*1.1)),fbm(q*1.4+vec2(5.2,1.3-t*1.1)));"+
+   "float n=fbm(q*1.1+w*2.2);n=clamp((n-.22)/.56,0.,1.);"+
+   "float s=.2;float x=uP*(1.+2.*s)-s;float m=smoothstep(x-s,x+s,n);"+
+   "float e=1.-abs(m*2.-1.);float sw=sin(3.14159*uP);"+
+   "vec2 flow=(w-.5)*.09*sw;vec2 refr=(w-.5)*.06*e;"+
+   "vec3 a=texture2D(uFrom,uv+flow+refr).rgb;"+
+   "vec3 b=texture2D(uTo,(uv-.5)/mix(1.05,1.,uP)+.5-flow*.6-refr).rgb;"+
+   "vec3 c=mix(b,a,m);c+=pow(e,3.)*.13*sw;"+
+   "gl_FragColor=vec4(c,1.);}",
  /* B: 넓고 부드러운 구름형 마스크 — 입자·글로우 없음 */
  B:"void main(){vec2 asp=vec2(uRes.x/uRes.y,1.);"+
    "float n=fbm(uv*asp*1.3+3.1);n=clamp((n-.22)/.56,0.,1.);"+
@@ -402,7 +428,7 @@ var copy=$("copy"),txtTimer=0;
 function pad(n){return(n<10?"0":"")+n}
 function setText(i){var s=SLIDES[i];
   $("c-eyebrow").textContent=s.eyebrow;
-  $("c-title").innerHTML="";s.t.forEach(function(l){var o=document.createElement("span");o.className="ln";var x=document.createElement("span");x.className="lt";x.textContent=l;o.appendChild(x);$("c-title").appendChild(o)});
+  $("c-title").innerHTML="";s.t.forEach(function(l){var o=document.createElement("span");o.className="ln";var x=document.createElement("span");x.className="lt";if(V.chars){Array.from(l).forEach(function(ch){var c=document.createElement("span");c.className="ch";c.textContent=ch;c.style.setProperty("--cd",Math.round(Math.random()*360)+"ms");c.style.setProperty("--cx",Math.round((Math.random()-.3)*24)+"px");c.style.setProperty("--cy",Math.round((Math.random()-.5)*16)+"px");x.appendChild(c)})}else x.textContent=l;o.appendChild(x);$("c-title").appendChild(o)});
   $("c-sub").textContent=s.sub;$("c-period").textContent=s.period;
   kv.style.setProperty("--kv-ink",s.ink);
   $("count").innerHTML="<b>"+pad(i+1)+"</b> / "+pad(N);
