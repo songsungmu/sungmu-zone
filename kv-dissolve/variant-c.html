@@ -10,7 +10,7 @@
   --f-body:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
   --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
   --gut-l:max(16px,env(safe-area-inset-left,0px)); --gut-r:max(16px,env(safe-area-inset-right,0px));
-  --dur:1400ms;
+  --dur:1600ms;
   color-scheme:light;
 }
 *{box-sizing:border-box}
@@ -52,10 +52,9 @@ body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-siz
 /* copy text transitions — variant specific */
 .copy > *{transition:opacity .28s ease}
 .copy.out > *{opacity:0}
-.copy.in > *{animation:bi var(--td,910ms) cubic-bezier(.2,.7,.2,1) both}
-.copy.in h2{animation-delay:60ms}.copy.in .sub{animation-delay:160ms}.copy.in .period{animation-delay:240ms}
-@keyframes bi{from{opacity:0;filter:blur(10px);letter-spacing:.12em}to{opacity:1;filter:blur(0)}}
-.copy.in h2{letter-spacing:-.02em}
+.copy.in > *{animation:sl var(--td,1040ms) cubic-bezier(.22,.7,.25,1) both}
+.copy.in h2{animation-delay:90ms}.copy.in .sub{animation-delay:180ms}.copy.in .period{animation-delay:270ms}
+@keyframes sl{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
 
 @media (max-width:720px){
   .kv{height:auto;aspect-ratio:4/5;max-height:640px;max-width:100%}
@@ -98,8 +97,8 @@ td code{font-family:var(--f-mono);font-size:12px;background:var(--paper);padding
     <div class="mark">KV Dissolve<small>메인 키비주얼 전환 시안</small></div>
     <nav class="tabs" aria-label="시안 선택">
       <a href="https://claude.ai/artifact/WaBCzG7zMhkcdw2FB1eT11" >A 크로스페이드</a>
-      <a href="https://claude.ai/artifact/SX93jQdcVYqefZB4RW64xU" >B 그레인</a>
-      <a href="https://claude.ai/artifact/EYzCZ6JvrraGngqw3NHZuG" aria-current="page">C 루마 블러</a>
+      <a href="https://claude.ai/artifact/SX93jQdcVYqefZB4RW64xU" >B 클라우드</a>
+      <a href="https://claude.ai/artifact/EYzCZ6JvrraGngqw3NHZuG" aria-current="page">C 라이트 스윕</a>
     </nav>
   </div>
 </header>
@@ -127,16 +126,16 @@ td code{font-family:var(--f-mono);font-size:12px;background:var(--paper);padding
   <div class="wrap spec-grid">
     <div>
       <div class="tag">Variant C</div>
-      <h1>Luma Blur Dissolve<span>루마 블러 디졸브</span></h1>
-      <p class="lead">다음 비주얼의 밝은 영역부터 먼저 스며들고, 전환 한가운데에서 블러와 미세한 물결 왜곡이 최대가 됩니다. 이미지가 녹아들며 바뀌는 몽환적인 무드입니다.</p>
-      <ol><li><b>루마 마스크</b> 다음 비주얼의 밝기(luma)가 높은 픽셀일수록 먼저 전환</li><li><b>블러 · 왜곡</b> sin(π·t) 곡선으로 중간 지점에서 블러 반경과 노이즈 왜곡이 최대</li><li><b>0 → 1400ms</b> 다음 비주얼 scale 1.07 → 1.00</li><li><b>700ms~</b> 카피가 블러 10px → 0, 자간이 넓은 상태에서 좁혀지며 등장</li></ol>
+      <h1>Light Sweep Dissolve<span>라이트 스윕 디졸브</span></h1>
+      <p class="lead">다음 비주얼이 왼쪽에서 오른쪽으로 비스듬히, 넓고 흐린 경계를 따라 빛이 스치듯 넘어옵니다. 두 비주얼이 서로 반대로 아주 조금 흘러 공간감이 생깁니다.</p>
+      <ol><li><b>사선 마스크</b> 약 20° 기울어진 그라디언트에 낮은 노이즈를 더해 경계가 직선처럼 보이지 않게 함</li><li><b>0 → 1600ms</b> 페더 폭 0.45로 화면 절반 가까이를 걸쳐 부드럽게 섞임</li><li><b>패럴랙스</b> 이전 비주얼은 왼쪽으로 1.2%, 다음 비주얼은 오른쪽 2%에서 제자리로 이동</li><li><b>640ms~</b> 카피가 왼쪽에서 12px 미끄러지며 페이드인</li></ol>
     </div>
     <div class="panel">
       <h3>인터랙션 스펙</h3>
-      <table><tbody><tr><td>전환 시간</td><td>1400ms</td></tr><tr><td>이징</td><td>easeInOutCubic</td></tr><tr><td>블러</td><td>radial 17-tap, 최대 1.4% (화면 대비)</td></tr><tr><td>왜곡</td><td>fbm displacement, 최대 7%</td></tr><tr><td>카피 등장</td><td>blur 10px → 0, letter-spacing .12em → 기본</td></tr><tr><td>구현</td><td>WebGL fragment shader (미지원 시 A로 대체)</td></tr></tbody></table>
+      <table><tbody><tr><td>전환 시간</td><td>1600ms</td></tr><tr><td>이징</td><td>easeInOutCubic</td></tr><tr><td>마스크</td><td>사선 그라디언트(20°) + 노이즈 0.12, soft edge 0.45</td></tr><tr><td>이미지 모션</td><td>from −1.2% / to +2% → 0 (가로)</td></tr><tr><td>카피 등장</td><td>fade + translateX 12px, 90ms stagger</td></tr><tr><td>구현</td><td>WebGL fragment shader (미지원 시 A로 대체)</td></tr></tbody></table>
       <div class="tune">
-        <label for="dur-range">전환 시간 <output id="dur-out">1400ms</output></label>
-        <input type="range" id="dur-range" min="400" max="3200" step="100" value="1400">
+        <label for="dur-range">전환 시간 <output id="dur-out">1600ms</output></label>
+        <input type="range" id="dur-range" min="400" max="3200" step="100" value="1600">
         <div class="btns">
           <button type="button" class="btn" id="replay">다음 전환 재생</button>
           <button type="button" class="btn ghost" id="slow">슬로모션 0.25×</button>
@@ -150,7 +149,7 @@ td code{font-family:var(--f-mono);font-size:12px;background:var(--paper);padding
 <script>
 (function(){
 "use strict";
-var V={"id":"C","dur":1400,"ease":"inOutCubic","textAt":0.5,"textDur":0.65};
+var V={"id":"C","dur":1600,"ease":"inOutCubic","textAt":0.4,"textDur":0.65};
 var SLIDES=[
  {kind:"arch",  eyebrow:"Holiday Collection", t:["겨울을 밝히는","홀리데이 선물 제안"], sub:"선물하기 좋은 시즌 한정 아이템을 한자리에", period:"2026.11.14 — 12.31", bg:["#141a33","#3b1d3f"], glow:"#e7b765", ink:"#ffffff"},
  {kind:"sphere",eyebrow:"Beauty Week",       t:["뷰티 위크","최대 20% 혜택"], sub:"인기 브랜드 기프트 세트와 단독 구성", period:"2026.11.20 — 11.30", bg:["#f7d9d2","#e98f7e"], glow:"#fff4ee", ink:"#2a1a17"},
@@ -290,25 +289,23 @@ function GLRenderer(fragBody){
 }
 
 var FRAG={
+ /* B: 넓고 부드러운 구름형 마스크 — 입자·글로우 없음 */
  B:"void main(){vec2 asp=vec2(uRes.x/uRes.y,1.);"+
-   "float n=fbm(uv*asp*3.2);n=clamp((n-.2)/.6,0.,1.);"+
-   "float g=hash(floor(uv*uRes/2.));n=mix(n,g,.3);"+
-   "float s=.07;float x=uP*(1.+2.*s)-s;float m=smoothstep(x-s,x+s,n);"+
-   "vec3 a=texture2D(uFrom,uv).rgb,b=texture2D(uTo,uv).rgb;"+
-   "vec3 c=mix(b,a,m);float e=1.-abs(m*2.-1.);c+=e*.12;"+
-   "gl_FragColor=vec4(c,1.);}",
- C:"vec3 blur(sampler2D t,vec2 p,float r){vec3 c=texture2D(t,p).rgb*.2;"+
-   "for(int i=0;i<8;i++){float a=float(i)*.785398;vec2 o=vec2(cos(a),sin(a))*r;c+=texture2D(t,p+o).rgb*.07+texture2D(t,p+o*.5).rgb*.03;}return c;}"+
-   "void main(){vec2 asp=vec2(uRes.x/uRes.y,1.);float s=sin(3.14159*uP);"+
-   "vec2 d=vec2(fbm(uv*asp*1.8),fbm(uv*asp*1.8+7.3))-.5;"+
-   "vec2 ua=uv+d*.07*s;"+
-   "vec2 ub=(uv-.5)/mix(1.07,1.,uP)+.5-d*.07*s;"+
-   "float r=.014*s;"+
-   "vec3 a=blur(uFrom,ua,r),b=blur(uTo,ub,r);"+
-   "float l=dot(b,vec3(.299,.587,.114));"+
-   "float k=clamp(uP*1.7-(1.-l)*.7,0.,1.);k=k*k*(3.-2.*k);"+
-   "vec3 c=mix(a,b,k)+s*.05;"+
-   "gl_FragColor=vec4(c,1.);}"
+   "float n=fbm(uv*asp*1.3+3.1);n=clamp((n-.22)/.56,0.,1.);"+
+   "float s=.32;float x=uP*(1.+2.*s)-s;float m=smoothstep(x-s,x+s,n);"+
+   "vec2 ub=(uv-.5)/mix(1.035,1.,uP)+.5;"+
+   "vec3 a=texture2D(uFrom,uv).rgb,b=texture2D(uTo,ub).rgb;"+
+   "gl_FragColor=vec4(mix(b,a,m),1.);}",
+ /* C: 넓은 페더의 사선 스윕 + 미세 패럴랙스 */
+ C:"void main(){vec2 asp=vec2(uRes.x/uRes.y,1.);"+
+   "vec2 dir=normalize(vec2(1.,.35));vec2 q=uv*asp;"+
+   "float span=dot(asp,abs(dir));float g=dot(q,dir)/span;"+
+   "g+=(fbm(q*1.2)-.5)*.12;"+
+   "float f=.45;float x=uP*(1.+2.*f)-f;float k=1.-smoothstep(x-f,x+f,g);"+
+   "vec2 ua=uv-vec2(.012*uP,0.);"+
+   "vec2 ub=uv+vec2(.02*(1.-uP),0.);"+
+   "vec3 a=texture2D(uFrom,ua).rgb,b=texture2D(uTo,ub).rgb;"+
+   "gl_FragColor=vec4(mix(a,b,k),1.);}"
 };
 
 /* ---------- controller ---------- */
